@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.appfinace.api.domain.user.User;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    public Boolean existByEmail(String email);
+    public Boolean existsByEmail(String email);
 
 
     @Query("SELECT a FROM User a " +

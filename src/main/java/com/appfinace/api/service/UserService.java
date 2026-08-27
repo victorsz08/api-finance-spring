@@ -38,7 +38,7 @@ public class UserService {
     public void createUser(UserRequestDto data) {
         String profileImg = null;
 
-        if(this.userRepository.existByEmail(data.email())) {
+        if(this.userRepository.existsByEmail(data.email())) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
 
@@ -94,7 +94,7 @@ public class UserService {
 
         User user = optionalUser.get();
 
-        if(!email.equals(user.getEmail()) && this.userRepository.existByEmail(email)) {
+        if(!email.equals(user.getEmail()) && this.userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
 
