@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Entity
 @Table(name = "users")
 @Getter
@@ -25,10 +24,10 @@ public class User {
     private UUID id;
 
     private String email;
-    
+
     private String name;
 
-    private String profileImageUrl;
+    private String currentProfileImgUrl;
 
     private String password;
 }
