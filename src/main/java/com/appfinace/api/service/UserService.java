@@ -13,10 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.appfinace.api.domain.user.ProfileImages;
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.user.FindUserResponseDto;
+import com.appfinace.api.dto.user.ProfileImagesResponseDto;
 import com.appfinace.api.dto.user.UserRequestDto;
 import com.appfinace.api.infra.S3StoragePort;
+import com.appfinace.api.repositories.ProfileImagesRepository;
 import com.appfinace.api.repositories.UserRepository;
 
 @Service
@@ -27,34 +30,50 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, S3StoragePort s3StoragePort, PasswordEncoder passwordEncoder) {
+    private final ProfileImagesRepository profileImagesRepository;
+
+    public UserService(
+        UserRepository userRepository, 
+        S3StoragePort s3StoragePort, 
+        PasswordEncoder passwordEncoder,
+        ProfileImagesRepository profileImagesRepository
+    ) {
         this.userRepository = userRepository;
         this.s3StoragePort = s3StoragePort;
         this.passwordEncoder = passwordEncoder;
+        this.profileImagesRepository = profileImagesRepository;
     }
 
 
 
     public void createUser(UserRequestDto data) {
-        String profileImg = null;
+        String currentProfileImage = null;
 
         if(this.userRepository.existsByEmail(data.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
         if(data.profileImage() != null) {
-            profileImg = s3StoragePort.uploadImage(data.profileImage());
+            currentProfileImage = s3StoragePort.uploadImage(data.profileImage());
         }
         String passwordHashed = this.passwordEncoder.encode(data.password());
 
         User aUser = new User();
+        ProfileImages profileImages = new ProfileImages();
 
         aUser.setEmail(data.email());
         aUser.setName(data.name());
-        aUser.setProfileImageUrl(profileImg);
+        aUser.setProfileImageUrl(currentProfileImage);
         aUser.setPassword(passwordHashed);
 
         this.userRepository.save(aUser);
+
+        if(currentProfileImage != null) {
+            profileImages.setProfileImageUrl(currentProfileImage);
+            profileImages.setUser(aUser);
+
+            this.profileImagesRepository.save(profileImages);
+        }
     }
 
     public FindUserResponseDto findUser(UUID id) {
@@ -98,9 +117,17 @@ public class UserService {
             throw new IllegalArgumentException("Email já cadastrado");
         }
 
+        ProfileImages profileImages = new ProfileImages();
+
         if(profileImage != null) {
-            String profileImageUrl = this.s3StoragePort.uploadImage(profileImage);
-            user.setProfileImageUrl(profileImageUrl);
+            String newProfileImageUrl = this.s3StoragePort.uploadImage(profileImage);
+            
+
+            profileImages.setProfileImageUrl(newProfileImageUrl);
+            profileImages.setUser(user);
+
+            this.profileImagesRepository.save(profileImages);
+            user.setProfileImageUrl(newProfileImageUrl);
         }
 
         user.setName(name);
@@ -135,5 +162,15 @@ public class UserService {
         }
 
         this.userRepository.deleteById(id);
+    }
+
+    public List<ProfileImagesResponseDto> getProfileImagesByUser(UUID id) {
+        List<ProfileImages> profileImages = this.profileImagesRepository.findByUserId(id);
+
+        return profileImages.stream()
+            .map(image -> new ProfileImagesResponseDto(
+                image.getId(), 
+                image.getProfileImageUrl()
+            )).toList();
     }
 }
