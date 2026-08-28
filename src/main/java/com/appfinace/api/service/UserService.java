@@ -39,7 +39,7 @@ public class UserService {
         String profileImg = null;
 
         if(this.userRepository.existsByEmail(data.email())) {
-            throw new IllegalArgumentException("Email já cadastrado");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
         if(data.profileImage() != null) {
