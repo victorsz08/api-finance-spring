@@ -125,6 +125,7 @@ public class UserService {
             user.setCurrentProfileImgUrl(newProfileImageUrl);
         }
 
+        user.setId(id);
         user.setName(name);
         user.setEmail(email);
 
