@@ -1,7 +1,7 @@
 package com.appfinace.api.domain.installment;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.appfinace.api.domain.category.Category;
@@ -36,7 +36,7 @@ public class InstallmentPurchase {
 
     private Integer totalInstallments;
 
-    private Date purchaseDate;
+    private LocalDate purchaseDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
