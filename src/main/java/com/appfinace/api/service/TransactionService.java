@@ -13,7 +13,7 @@ import com.appfinace.api.domain.category.Category;
 import com.appfinace.api.domain.transaction.Transaction;
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.category.CategoryResponseDto;
-import com.appfinace.api.dto.transaction.MonthlySumaryResponseDto;
+import com.appfinace.api.dto.transaction.MonthlySummaryResponseDto;
 import com.appfinace.api.dto.transaction.TransactionRequestDto;
 import com.appfinace.api.dto.transaction.TransactionResponseDto;
 import com.appfinace.api.repositories.CategoryRepository;
@@ -74,7 +74,7 @@ public class TransactionService {
                 .toList();
     }
 
-    public MonthlySumaryResponseDto getMonthySumary(int month, int year, UUID userId) {
+    public MonthlySummaryResponseDto getMonthlySummary(int month, int year, UUID userId) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -83,6 +83,6 @@ public class TransactionService {
         var totalExpense = this.transactionRepository.sumExpenseByMonth(userId, startDate, endDate);
         var balance = totalIncome.subtract(totalExpense);
 
-        return new MonthlySumaryResponseDto(month, year, totalIncome, totalExpense, balance);
+        return new MonthlySummaryResponseDto(month, year, totalIncome, totalExpense, balance);
     }
 }
