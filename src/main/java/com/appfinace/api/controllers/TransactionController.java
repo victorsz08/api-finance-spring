@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.appfinace.api.dto.transaction.MonthlySummaryResponseDto;
@@ -39,7 +40,8 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TransactionResponseDto>> listByMonth(int month, int year,
+    public ResponseEntity<List<TransactionResponseDto>> listByMonth(@RequestParam(required = false) int month,
+            @RequestParam(required = false) int year,
             @AuthenticationPrincipal UserDetailsImpl user) {
         UUID userId = user.getUser().getId();
         List<TransactionResponseDto> transactions = this.transactionService.listByMonth(month, year, userId);
@@ -48,7 +50,8 @@ public class TransactionController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<MonthlySummaryResponseDto> getMonthlySummary(int month, int year,
+    public ResponseEntity<MonthlySummaryResponseDto> getMonthlySummary(@RequestParam(required = true) int month,
+            @RequestParam(required = true) int year,
             @AuthenticationPrincipal UserDetailsImpl user) {
         UUID userId = user.getUser().getId();
         MonthlySummaryResponseDto summary = this.transactionService.getMonthlySummary(month, year, userId);

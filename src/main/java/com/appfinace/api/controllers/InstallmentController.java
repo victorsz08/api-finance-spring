@@ -27,8 +27,9 @@ public class InstallmentController {
     }
 
     @PatchMapping("/{id}/pay")
-    public ResponseEntity<Void> payInstallment(@PathVariable UUID id) {
-        this.installmentService.payInstallment(id);
+    public ResponseEntity<Void> payInstallment(@PathVariable UUID id, @AuthenticationPrincipal UserDetailsImpl user) {
+        UUID userId = user.getUser().getId();
+        this.installmentService.payInstallment(id, userId);
 
         return ResponseEntity.ok().build();
     }

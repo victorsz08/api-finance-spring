@@ -1,6 +1,7 @@
 package com.appfinace.api.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,13 +14,18 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.appfinace.api.domain.category.Category;
 import com.appfinace.api.domain.fixed_expense.FixedExpense;
+import com.appfinace.api.domain.transaction.Transaction;
+import com.appfinace.api.domain.transaction.TransactionType;
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.category.CategoryResponseDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseRequestDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseResponseDto;
 import com.appfinace.api.repositories.CategoryRepository;
 import com.appfinace.api.repositories.FixedExpenseRepository;
+import com.appfinace.api.repositories.TransactionRepository;
 import com.appfinace.api.repositories.UserRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class FixedExpenseService {
@@ -27,14 +33,17 @@ public class FixedExpenseService {
         private final FixedExpenseRepository fixedExpenseRepository;
         private final UserRepository userRepository;
         private final CategoryRepository categoryRepository;
+        private final TransactionRepository transactionRepository;
 
         public FixedExpenseService(
                         FixedExpenseRepository fixedExpenseRepository,
                         UserRepository userRepository,
-                        CategoryRepository categoryRepository) {
+                        CategoryRepository categoryRepository,
+                        TransactionRepository transactionRepository) {
                 this.fixedExpenseRepository = fixedExpenseRepository;
                 this.userRepository = userRepository;
                 this.categoryRepository = categoryRepository;
+                this.transactionRepository = transactionRepository;
         }
 
         public void create(FixedExpenseRequestDto data, UUID userId) {
@@ -137,5 +146,29 @@ public class FixedExpenseService {
                                                 "Despesa não localizada"));
 
                 this.fixedExpenseRepository.delete(fixedExpense);
+        }
+
+        @Transactional
+        public void markAsPaid(UUID id, UUID userId) {
+                FixedExpense fixedExpense = this.fixedExpenseRepository.findByIdAndUserId(id, userId)
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                                "Despesa não localizada"));
+
+                if (!fixedExpense.getActive()) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Despesa já está inativa");
+                }
+
+                fixedExpense.setActive(false);
+                this.fixedExpenseRepository.save(fixedExpense);
+
+                Transaction transaction = new Transaction();
+                transaction.setDescription(fixedExpense.getDescription());
+                transaction.setAmount(fixedExpense.getAmount());
+                transaction.setDate(LocalDate.now());
+                transaction.setType(TransactionType.EXPENSE);
+                transaction.setUser(fixedExpense.getUser());
+                transaction.setCategory(fixedExpense.getCategory());
+
+                this.transactionRepository.save(transaction);
         }
 }
