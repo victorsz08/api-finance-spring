@@ -40,8 +40,8 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TransactionResponseDto>> listByMonth(@RequestParam(required = false) int month,
-            @RequestParam(required = false) int year,
+    public ResponseEntity<List<TransactionResponseDto>> listByMonth(@RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
             @AuthenticationPrincipal UserDetailsImpl user) {
         UUID userId = user.getUser().getId();
         List<TransactionResponseDto> transactions = this.transactionService.listByMonth(month, year, userId);
@@ -50,8 +50,8 @@ public class TransactionController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<MonthlySummaryResponseDto> getMonthlySummary(@RequestParam(required = true) int month,
-            @RequestParam(required = true) int year,
+    public ResponseEntity<MonthlySummaryResponseDto> getMonthlySummary(@RequestParam(required = true) Integer month,
+            @RequestParam(required = true) Integer year,
             @AuthenticationPrincipal UserDetailsImpl user) {
         UUID userId = user.getUser().getId();
         MonthlySummaryResponseDto summary = this.transactionService.getMonthlySummary(month, year, userId);
