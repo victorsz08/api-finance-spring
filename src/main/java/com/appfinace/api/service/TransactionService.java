@@ -1,8 +1,10 @@
 package com.appfinace.api.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -79,9 +81,15 @@ public class TransactionService {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        var totalIncome = this.transactionRepository.sumIncomeByMonth(userId, startDate, endDate);
-        var totalExpense = this.transactionRepository.sumExpenseByMonth(userId, startDate, endDate);
-        var balance = totalIncome.subtract(totalExpense);
+        BigDecimal totalIncome = Optional.ofNullable(
+                this.transactionRepository.sumIncomeByMonth(userId, startDate, endDate))
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalExpense = Optional.ofNullable(
+                this.transactionRepository.sumExpenseByMonth(userId, startDate, endDate))
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal balance = totalIncome.subtract(totalExpense);
 
         return new MonthlySummaryResponseDto(month, year, totalIncome, totalExpense, balance);
     }
