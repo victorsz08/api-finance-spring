@@ -173,4 +173,24 @@ public class InstallmentServiceTest {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void shouldThrowBadRequestWhenOnlyMonthProvided() {
+        assertThatThrownBy(() -> installmentService.listPending(userId, 3, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Informe mês e ano juntos, ou nenhum dos dois");
+
+        verify(installmentRepository, never()).findPendingByMonth(any(), anyInt(), anyInt());
+        verify(installmentRepository, never()).findAllPending(any());
+    }
+
+    @Test
+    void shouldThrowBadRequestWhenOnlyYearProvided() {
+        assertThatThrownBy(() -> installmentService.listPending(userId, null, 2026))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Informe mês e ano juntos, ou nenhum dos dois");
+
+        verify(installmentRepository, never()).findPendingByMonth(any(), anyInt(), anyInt());
+        verify(installmentRepository, never()).findAllPending(any());
+    }
 }
