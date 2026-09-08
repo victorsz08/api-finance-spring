@@ -57,6 +57,10 @@ public class InstallmentService {
         }
 
         public List<InstallmentResponseDto> listPending(UUID userId, Integer month, Integer year) {
+                if ((month != null) != (year != null)) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                        "Informe mês e ano juntos, ou nenhum dos dois");
+                }
                 List<Installment> installments = (month != null && year != null)
                                 ? installmentRepository.findPendingByMonth(userId, month, year)
                                 : installmentRepository.findAllPending(userId);
