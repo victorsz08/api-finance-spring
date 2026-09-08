@@ -37,8 +37,8 @@ public class InstallmentController {
     @GetMapping("/pending")
     public ResponseEntity<List<InstallmentResponseDto>> listPending(
             @AuthenticationPrincipal UserDetailsImpl user,
-            @RequestParam(required = false) int month,
-            @RequestParam(required = false) int year) {
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
         UUID userId = user.getUser().getId();
         List<InstallmentResponseDto> data = this.installmentService.listPending(userId, month, year);
 
