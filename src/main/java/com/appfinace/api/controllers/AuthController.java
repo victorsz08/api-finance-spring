@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.beans.factory.annotation.Value;
 import com.appfinace.api.dto.auth.AuthLoginRequestDto;
 import com.appfinace.api.dto.auth.AuthLoginResponseDto;
 import com.appfinace.api.dto.user.FindUserResponseDto;
@@ -25,6 +26,9 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
+    @Value("${app.cookie.secure}")
+    private Boolean isProduction;
+
     public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
         this.userService = userService;
@@ -36,7 +40,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("access_token", response.token())
                 .httpOnly(true)
-                .secure(false)
+                .secure(isProduction)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(60 * 60 * 24)
@@ -51,7 +55,7 @@ public class AuthController {
     public ResponseEntity<Void> logout() {
         ResponseCookie cookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(isProduction)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(0)
