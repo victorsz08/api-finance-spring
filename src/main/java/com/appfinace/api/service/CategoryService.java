@@ -30,28 +30,22 @@ public class CategoryService {
     public void createCategory(CategoryRequestDto data, UUID userId) {
         Category aCategory = new Category();
 
-        Optional<User> user = this.userRepository.findById(userId);
-        if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não localizado com esse id");
-        }
-
-        User aUser = user.get();
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não localizado com esse id"));
 
         aCategory.setName(data.name());
         aCategory.setType(data.type());
-        aCategory.setUser(aUser);
+        aCategory.setUser(user);
 
         this.categoryRepository.save(aCategory);
     }
 
-    public CategoryResponseDto findCategory(UUID id) {
-        Optional<Category> data = this.categoryRepository.findById(id);
+    public CategoryResponseDto findCategory(UUID id, UUID userId) {
+        Category category = this.categoryRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Categoria não localizada com esse id"));
 
-        if (data.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id");
-        }
-
-        Category category = data.get();
         return new CategoryResponseDto(
                 category.getId(),
                 category.getName(),
@@ -67,28 +61,22 @@ public class CategoryService {
                 c.getType())).toList();
     }
 
-    public void update(UUID id, String name, String type) {
-        Optional<Category> data = this.categoryRepository.findById(id);
+    public void update(UUID id, String name, String type, UUID userId) {
+        Category category = this.categoryRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Categoria não localizada com esse id"));
 
-        if (data.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id");
-        }
+        category.setName(name);
+        category.setType(type);
 
-        Category aCategory = data.get();
-
-        aCategory.setName(name);
-        aCategory.setType(type);
-
-        this.categoryRepository.save(aCategory);
+        this.categoryRepository.save(category);
     }
 
-    public void delete(UUID id) {
-        Optional<Category> data = this.categoryRepository.findById(id);
+    public void delete(UUID id, UUID userId) {
+        Category category = this.categoryRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Categoria não localizada com esse id"));
 
-        if (data.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id");
-        }
-
-        this.categoryRepository.delete(data.get());
+        this.categoryRepository.delete(category);
     }
 }
