@@ -2,6 +2,7 @@ package com.appfinace.api.controllers;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,142 +47,145 @@ import tools.jackson.databind.ObjectMapper;
 @Import(SecurityConfig.class)
 public class CategoryControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private CategoryService categoryService;
+        @MockitoBean
+        private CategoryService categoryService;
 
-    @MockitoBean
-    private JwtService jwtService;
+        @MockitoBean
+        private JwtService jwtService;
 
-    @MockitoBean
-    private UserDetailsImplService userDetailsImplService;
+        @MockitoBean
+        private UserDetailsImplService userDetailsImplService;
 
-    private UUID userId;
-    private UUID categoryId;
+        private UUID userId;
+        private UUID categoryId;
 
-    @BeforeEach
-    public void setUp() {
-        userId = UUID.randomUUID();
-        categoryId = UUID.randomUUID();
+        @BeforeEach
+        public void setUp() {
+                userId = UUID.randomUUID();
+                categoryId = UUID.randomUUID();
 
-        User user = new User();
-        user.setId(userId);
+                User user = new User();
+                user.setId(userId);
 
-        UserDetailsImpl userDetails = new UserDetailsImpl(user);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
+                UserDetailsImpl userDetails = new UserDetailsImpl(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
 
-    @AfterEach
-    public void tearDown() {
-        SecurityContextHolder.clearContext();
-    }
+        @AfterEach
+        public void tearDown() {
+                SecurityContextHolder.clearContext();
+        }
 
-    @Test
-    public void shouldCreateCategorySuccessfully() throws Exception {
-        CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
+        @Test
+        public void shouldCreateCategorySuccessfully() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated());
-    }
+                mockMvc.perform(post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto)))
+                                .andExpect(status().isCreated());
+        }
 
-    @Test
-    public void shouldThrowNotFoundWhenUserNotFoundOnCreate() throws Exception {
-        CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
+        @Test
+        public void shouldThrowNotFoundWhenUserNotFoundOnCreate() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
 
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não localizado com esse id"))
-                .when(categoryService).createCategory(any(), eq(userId));
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não localizado com esse id"))
+                                .when(categoryService).createCategory(any(), eq(userId));
 
-        mockMvc.perform(post("/api/categories")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
-    }
+                mockMvc.perform(post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
+        }
 
-    @Test
-    public void shouldListCategoriesSuccessfully() throws Exception {
-        CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE");
+        @Test
+        public void shouldListCategoriesSuccessfully() throws Exception {
+                CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE");
 
-        when(categoryService.listCategories(userId)).thenReturn(List.of(response));
+                when(categoryService.listCategories(userId)).thenReturn(List.of(response));
 
-        mockMvc.perform(get("/api/categories"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Transporte"));
-    }
+                mockMvc.perform(get("/api/categories"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].name").value("Transporte"));
+        }
 
-    @Test
-    public void shouldReturnEmptyListWhenUserHasNoCategories() throws Exception {
-        when(categoryService.listCategories(userId)).thenReturn(List.of());
+        @Test
+        public void shouldReturnEmptyListWhenUserHasNoCategories() throws Exception {
+                when(categoryService.listCategories(userId)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/categories"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
-    }
+                mockMvc.perform(get("/api/categories"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(0));
+        }
 
-    @Test
-    public void shouldFindCategoryByIdSuccessfully() throws Exception {
-        CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE");
+        @Test
+        public void shouldFindCategoryByIdSuccessfully() throws Exception {
+                CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE");
 
-        when(categoryService.findCategory(categoryId)).thenReturn(response);
+                when(categoryService.findCategory(categoryId, userId)).thenReturn(response);
 
-        mockMvc.perform(get("/api/categories/{id}", categoryId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Transporte"))
-                .andExpect(jsonPath("$.type").value("EXPENSE"));
-    }
+                mockMvc.perform(get("/api/categories/{id}", categoryId))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.name").value("Transporte"))
+                                .andExpect(jsonPath("$.type").value("EXPENSE"));
+        }
 
-    @Test
-    public void shouldThrowNotFoundCatshouldThrowNotFoundWhenCategoryNotFoundOnFindegoryById() throws Exception {
-        when(categoryService.findCategory(categoryId))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id"));
+        @Test
+        public void shouldThrowNotFoundCatshouldThrowNotFoundWhenCategoryNotFoundOnFindegoryById() throws Exception {
+                when(categoryService.findCategory(categoryId, userId))
+                                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                                "Categoria não localizada com esse id"));
 
-        mockMvc.perform(get("/api/categories/{id}", categoryId))
-                .andExpect(status().isNotFound());
-    }
+                mockMvc.perform(get("/api/categories/{id}", categoryId))
+                                .andExpect(status().isNotFound());
+        }
 
-    @Test
-    public void shouldUpdateCategorySuccessfully() throws Exception {
-        CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
+        @Test
+        public void shouldUpdateCategorySuccessfully() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
 
-        mockMvc.perform(put("/api/categories/{id}", categoryId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
-    }
+                mockMvc.perform(put("/api/categories/{id}", categoryId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto)))
+                                .andExpect(status().isOk());
+        }
 
-    @Test
-    public void shouldThrowNotFoundWhenUpdateCategoryNotFound() throws Exception {
-        CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE");
+        @Test
+        public void shouldThrowNotFoundWhenUpdateCategoryNotFound() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE");
 
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id"))
-                .when(categoryService).update(categoryId, "Alimentação", "EXPENSE");
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id"))
+                                .when(categoryService).update(categoryId, "Alimentação", "EXPENSE", userId);
 
-        mockMvc.perform(put("/api/categories/{id}", categoryId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
-    }
+                mockMvc.perform(put("/api/categories/{id}", categoryId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
+        }
 
-    @Test
-    public void shouldDeleteCategorySuccessfully() throws Exception {
-        mockMvc.perform(delete("/api/categories/{id}", categoryId))
-                .andExpect(status().isOk());
-    }
+        @Test
+        public void shouldDeleteCategorySuccessfully() throws Exception {
+                mockMvc.perform(delete("/api/categories/{id}", categoryId))
+                                .andExpect(status().isOk());
 
-    @Test
-    public void shouldThrowNotFoundWhenDeleteCategoryNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id"))
-                .when(categoryService).delete(categoryId);
+                verify(categoryService).delete(categoryId, userId);
+        }
 
-        mockMvc.perform(delete("/api/categories/{id}", categoryId))
-                .andExpect(status().isNotFound());
-    }
+        @Test
+        public void shouldThrowNotFoundWhenDeleteCategoryNotFound() throws Exception {
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id"))
+                                .when(categoryService).delete(categoryId, userId);
+
+                mockMvc.perform(delete("/api/categories/{id}", categoryId))
+                                .andExpect(status().isNotFound());
+        }
 }
