@@ -37,6 +37,7 @@ public class CategoryServiceTest {
 
     private UUID categoryId;
     private UUID userId;
+    private UUID otherUserId;
     private Category existingsCategory;
     private User user;
 
@@ -47,6 +48,7 @@ public class CategoryServiceTest {
     public void setUp() {
         categoryId = UUID.randomUUID();
         userId = UUID.randomUUID();
+        otherUserId = UUID.randomUUID();
 
         user = new User();
         user.setId(userId);
@@ -91,9 +93,9 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldReturnCategoryWithId() {
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingsCategory));
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(existingsCategory));
 
-        CategoryResponseDto response = categoryService.findCategory(categoryId);
+        CategoryResponseDto response = categoryService.findCategory(categoryId, userId);
 
         assertThat(response.id()).isEqualTo(categoryId);
         assertThat(response.name()).isEqualTo("Teste");
@@ -102,9 +104,18 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldThrowCategoryNotFoundWithId() {
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> categoryService.findCategory(categoryId))
+        assertThatThrownBy(() -> categoryService.findCategory(categoryId, userId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Categoria não localizada com esse id");
+    }
+
+    @Test
+    public void shouldThrowNotFoundWhenCategoryDoesNotBelongToUser() {
+        when(categoryRepository.findByIdAndUserId(categoryId, otherUserId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.findCategory(categoryId, otherUserId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Categoria não localizada com esse id");
     }
@@ -130,9 +141,9 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldUpdateCategorySuccessfully() {
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingsCategory));
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(existingsCategory));
 
-        categoryService.update(categoryId, "Transporte", "EXPENSE");
+        categoryService.update(categoryId, "Transporte", "EXPENSE", userId);
 
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         verify(categoryRepository).save(captor.capture());
@@ -143,9 +154,20 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldThrowUpdateCategoryWhenCategoryNotExists() {
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> categoryService.update(categoryId, "Transporte", "Expense"))
+        assertThatThrownBy(() -> categoryService.update(categoryId, "Transporte", "Expense", userId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Categoria não localizada com esse id");
+
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    public void shouldThrowNotFoundWhenUpdatingCategoryThatBelongsToAnotherUser() {
+        when(categoryRepository.findByIdAndUserId(categoryId, otherUserId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.update(categoryId, "Hackeado", "EXPENSE", otherUserId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Categoria não localizada com esse id");
 
@@ -154,18 +176,29 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldDeleteCategorySuccessfully() {
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingsCategory));
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(existingsCategory));
 
-        categoryService.delete(categoryId);
+        categoryService.delete(categoryId, userId);
 
         verify(categoryRepository, times(1)).delete(existingsCategory);
     }
 
     @Test
     public void shouldThrowWhenDeleteCategoryNotFoundWithId() {
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> categoryService.delete(categoryId))
+        assertThatThrownBy(() -> categoryService.delete(categoryId, userId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Categoria não localizada com esse id");
+
+        verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    public void shouldThrowNotFoundWhenDeletingCategoryThatBelongsToAnotherUser() {
+        when(categoryRepository.findByIdAndUserId(categoryId, otherUserId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.delete(categoryId, otherUserId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Categoria não localizada com esse id");
 
