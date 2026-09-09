@@ -49,22 +49,27 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> find(@PathVariable UUID id) {
-        CategoryResponseDto data = this.categoryService.findCategory(id);
+    public ResponseEntity<CategoryResponseDto> find(@AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable UUID id) {
+        UUID userId = user.getUser().getId();
+        CategoryResponseDto data = this.categoryService.findCategory(id, userId);
 
         return ResponseEntity.ok(data);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable UUID id, @RequestBody CategoryRequestDto body) {
-        this.categoryService.update(id, body.name(), body.type());
+    public ResponseEntity<Void> update(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
+            @RequestBody CategoryRequestDto body) {
+        UUID userId = user.getUser().getId();
+        this.categoryService.update(id, body.name(), body.type(), userId);
 
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        this.categoryService.delete(id);
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id) {
+        UUID userId = user.getUser().getId();
+        this.categoryService.delete(id, userId);
 
         return ResponseEntity.ok().build();
     }
