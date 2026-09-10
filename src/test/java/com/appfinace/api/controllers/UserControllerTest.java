@@ -22,7 +22,7 @@ import java.util.UUID;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.appfinace.api.dto.user.FindUserResponseDto;
+import com.appfinace.api.dto.user.UserResponseDto;
 import com.appfinace.api.dto.user.ProfileImagesResponseDto;
 import com.appfinace.api.infra.security.JwtService;
 import com.appfinace.api.infra.security.UserDetailsImplService;
@@ -68,7 +68,7 @@ public class UserControllerTest {
         @Test
         public void shouldReturnUserWhenFound() throws Exception {
                 UUID id = UUID.randomUUID();
-                FindUserResponseDto response = new FindUserResponseDto(id, "joao@email.com", "Joao", "//image");
+                UserResponseDto response = new UserResponseDto(id, "joao@email.com", "Joao", "//image");
 
                 when(userService.findUser(id)).thenReturn(response);
 

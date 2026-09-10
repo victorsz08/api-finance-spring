@@ -28,7 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.auth.AuthLoginRequestDto;
 import com.appfinace.api.dto.auth.AuthLoginResponseDto;
-import com.appfinace.api.dto.user.FindUserResponseDto;
+import com.appfinace.api.dto.user.UserResponseDto;
 import com.appfinace.api.infra.config.SecurityConfig;
 import com.appfinace.api.infra.security.JwtService;
 import com.appfinace.api.infra.security.UserDetailsImpl;
@@ -121,7 +121,7 @@ public class AuthControllerTest {
 
     @Test
     public void shouldReturnCurrentUserSuccessfully() throws Exception {
-        FindUserResponseDto response = new FindUserResponseDto(userId, "joao@email.com", "Joao", "//image.png");
+        UserResponseDto response = new UserResponseDto(userId, "joao@email.com", "Joao", "//image.png");
 
         when(userService.findUser(userId)).thenReturn(response);
 

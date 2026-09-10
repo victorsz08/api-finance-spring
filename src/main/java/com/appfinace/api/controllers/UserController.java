@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.appfinace.api.dto.user.FindUserResponseDto;
+import com.appfinace.api.dto.user.UserResponseDto;
 import com.appfinace.api.dto.user.ProfileImagesResponseDto;
 import com.appfinace.api.dto.user.UserRequestDto;
 import com.appfinace.api.service.UserService;
@@ -37,19 +37,19 @@ public class UserController {
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<List<FindUserResponseDto>> listUsersFiltred(
+    public ResponseEntity<List<UserResponseDto>> listUsersFiltred(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email) {
-        List<FindUserResponseDto> data = this.userService.listUsers(page, size, email, name);
+        List<UserResponseDto> data = this.userService.listUsers(page, size, email, name);
 
         return ResponseEntity.ok(data);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FindUserResponseDto> findUser(@PathVariable UUID id) {
-        FindUserResponseDto data = this.userService.findUser(id);
+    public ResponseEntity<UserResponseDto> findUser(@PathVariable UUID id) {
+        UserResponseDto data = this.userService.findUser(id);
 
         return ResponseEntity.ok(data);
     }
@@ -66,5 +66,5 @@ public class UserController {
         List<ProfileImagesResponseDto> data = this.userService.getProfileImagesByUser(id);
 
         return ResponseEntity.ok(data);
-    } 
+    }
 }

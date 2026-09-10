@@ -15,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.appfinace.api.domain.user.ProfileImages;
 import com.appfinace.api.domain.user.User;
-import com.appfinace.api.dto.user.FindUserResponseDto;
+import com.appfinace.api.dto.user.UserResponseDto;
 import com.appfinace.api.dto.user.ProfileImagesResponseDto;
 import com.appfinace.api.dto.user.UserRequestDto;
 import com.appfinace.api.infra.S3StoragePort;
@@ -73,7 +73,7 @@ public class UserService {
         }
     }
 
-    public FindUserResponseDto findUser(UUID id) {
+    public UserResponseDto findUser(UUID id) {
         Optional<User> optionalUser = this.userRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
@@ -82,10 +82,10 @@ public class UserService {
 
         User user = optionalUser.get();
 
-        return new FindUserResponseDto(user.getId(), user.getEmail(), user.getName(), user.getCurrentProfileImgUrl());
+        return new UserResponseDto(user.getId(), user.getEmail(), user.getName(), user.getCurrentProfileImgUrl());
     };
 
-    public List<FindUserResponseDto> listUsers(int page, int size, String email, String name) {
+    public List<UserResponseDto> listUsers(int page, int size, String email, String name) {
         name = (name != null) ? name : "";
         email = (email != null) ? email : "";
 
@@ -93,7 +93,7 @@ public class UserService {
 
         Page<User> usersFiltred = this.userRepository.getFiltredUsers(name, email, pageable);
 
-        return usersFiltred.map(user -> new FindUserResponseDto(
+        return usersFiltred.map(user -> new UserResponseDto(
                 user.getId(),
                 user.getEmail(),
                 user.getName(),

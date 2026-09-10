@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Value;
 import com.appfinace.api.dto.auth.AuthLoginRequestDto;
 import com.appfinace.api.dto.auth.AuthLoginResponseDto;
-import com.appfinace.api.dto.user.FindUserResponseDto;
+import com.appfinace.api.dto.user.UserResponseDto;
 import com.appfinace.api.infra.security.UserDetailsImpl;
 import com.appfinace.api.service.AuthService;
 import com.appfinace.api.service.UserService;
@@ -67,9 +67,9 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<FindUserResponseDto> getMe(@AuthenticationPrincipal UserDetailsImpl userDetatails) {
+    public ResponseEntity<UserResponseDto> getMe(@AuthenticationPrincipal UserDetailsImpl userDetatails) {
         UUID id = userDetatails.getUser().getId();
-        FindUserResponseDto data = this.userService.findUser(id);
+        UserResponseDto data = this.userService.findUser(id);
 
         return ResponseEntity.ok(data);
     }
