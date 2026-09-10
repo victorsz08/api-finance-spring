@@ -1,4 +1,9 @@
 package com.appfinace.api.dto.auth;
 
-public record AuthLoginRequestDto(String email, String password) {
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+public record AuthLoginRequestDto(
+        @NotBlank(message = "Email é obrigatório") @Email String email,
+        @NotBlank(message = "Senha é obrigatória") String password) {
 }
