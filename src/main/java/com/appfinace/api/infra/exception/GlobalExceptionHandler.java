@@ -1,6 +1,5 @@
 package com.appfinace.api.infra.exception;
 
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
