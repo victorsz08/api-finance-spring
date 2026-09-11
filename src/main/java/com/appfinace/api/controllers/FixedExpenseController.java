@@ -23,6 +23,8 @@ import com.appfinace.api.dto.fixed_expense.FixedExpenseResponseDto;
 import com.appfinace.api.infra.security.UserDetailsImpl;
 import com.appfinace.api.service.FixedExpenseService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/fixed-expenses")
 public class FixedExpenseController {
@@ -36,7 +38,7 @@ public class FixedExpenseController {
     @PostMapping
     public ResponseEntity<Void> create(
             @AuthenticationPrincipal UserDetailsImpl user,
-            @RequestBody FixedExpenseRequestDto body) {
+            @Valid @RequestBody FixedExpenseRequestDto body) {
         UUID userId = user.getUser().getId();
 
         this.fixedExpenseService.create(body, userId);
@@ -72,30 +74,36 @@ public class FixedExpenseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FixedExpenseResponseDto> find(@PathVariable UUID id) {
-        FixedExpenseResponseDto data = this.fixedExpenseService.findById(id);
+    public ResponseEntity<FixedExpenseResponseDto> find(@AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable UUID id) {
+        UUID userId = user.getUser().getId();
+        FixedExpenseResponseDto data = this.fixedExpenseService.findById(id, userId);
 
         return ResponseEntity.ok(data);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable UUID id,
-            @RequestBody FixedExpenseRequestDto body) {
-        this.fixedExpenseService.update(id, body);
+    public ResponseEntity<Void> update(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
+            @Valid @RequestBody FixedExpenseRequestDto body) {
+        UUID userId = user.getUser().getId();
+        this.fixedExpenseService.update(id, body, userId);
 
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/active/{id}")
-    public ResponseEntity<Void> updateActivEntity(@PathVariable UUID id, @RequestParam Boolean active) {
-        this.fixedExpenseService.updateActive(id, active);
+    public ResponseEntity<Void> updateActivEntity(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
+            @RequestParam Boolean active) {
+        UUID userId = user.getUser().getId();
+        this.fixedExpenseService.updateActive(id, active, userId);
 
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        this.fixedExpenseService.delete(id);
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id) {
+        UUID userId = user.getUser().getId();
+        this.fixedExpenseService.delete(id, userId);
 
         return ResponseEntity.ok().build();
     }

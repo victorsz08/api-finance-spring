@@ -7,14 +7,14 @@ import java.util.UUID;
 import com.appfinace.api.domain.transaction.TransactionType;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record TransactionRequestDto(
-                @NotBlank String description,
-                @NotBlank @Positive BigDecimal amount,
-                @NotBlank @Pattern(regexp = "EXPENSE|INCOME", message = "O tipo deve ser Despesa ou Entrada") TransactionType type,
-                @NotBlank LocalDate date,
-                @NotBlank UUID categoryId) {
+        @NotBlank String description,
+        @NotNull @Positive BigDecimal amount,
+        @NotNull TransactionType type,
+        @NotNull LocalDate date,
+        @NotNull UUID categoryId) {
 
 }

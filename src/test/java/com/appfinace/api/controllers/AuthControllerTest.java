@@ -140,4 +140,13 @@ public class AuthControllerTest {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    public void shouldThrowBadRequestWhenAuthLoginEmailAndPasswordIsBlank() throws Exception {
+        AuthLoginRequestDto dto = new AuthLoginRequestDto("", "");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+    }
 }

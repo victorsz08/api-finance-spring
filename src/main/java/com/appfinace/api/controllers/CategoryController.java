@@ -20,6 +20,8 @@ import com.appfinace.api.dto.category.CategoryResponseDto;
 import com.appfinace.api.infra.security.UserDetailsImpl;
 import com.appfinace.api.service.CategoryService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
@@ -33,7 +35,7 @@ public class CategoryController {
     @PostMapping()
     public ResponseEntity<Void> create(
             @AuthenticationPrincipal UserDetailsImpl user,
-            @RequestBody CategoryRequestDto body) {
+            @Valid @RequestBody CategoryRequestDto body) {
         UUID userId = user.getUser().getId();
         this.categoryService.createCategory(body, userId);
 
@@ -59,7 +61,7 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> update(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
-            @RequestBody CategoryRequestDto body) {
+            @Valid @RequestBody CategoryRequestDto body) {
         UUID userId = user.getUser().getId();
         this.categoryService.update(id, body.name(), body.type(), userId);
 

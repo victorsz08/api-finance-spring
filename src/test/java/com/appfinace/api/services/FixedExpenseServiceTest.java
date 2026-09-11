@@ -93,7 +93,7 @@ public class FixedExpenseServiceTest {
         FixedExpenseRequestDto dto = new FixedExpenseRequestDto("teste", new BigDecimal(1200), 10, categoryId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existsCategory));
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(existsCategory));
 
         fixedExpenseService.create(dto, userId);
 
@@ -126,7 +126,7 @@ public class FixedExpenseServiceTest {
         FixedExpenseRequestDto dto = new FixedExpenseRequestDto("teste", new BigDecimal(1200), 10, categoryId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> fixedExpenseService.create(dto, userId))
                 .isInstanceOf(ResponseStatusException.class)
@@ -190,9 +190,10 @@ public class FixedExpenseServiceTest {
 
     @Test
     public void shouldReturnFindFixedExpenseWithId() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.of(existingFixedExpense));
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId))
+                .thenReturn(Optional.of(existingFixedExpense));
 
-        FixedExpenseResponseDto result = fixedExpenseService.findById(fixedExpenseId);
+        FixedExpenseResponseDto result = fixedExpenseService.findById(fixedExpenseId, userId);
 
         assertThat(result.description()).isEqualTo("teste");
         assertThat(result.amount()).isEqualTo(new BigDecimal(1200));
@@ -204,22 +205,23 @@ public class FixedExpenseServiceTest {
 
     @Test
     public void shouldThrowNotFountFixedExpenseWithId() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.empty());
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> fixedExpenseService.findById(fixedExpenseId))
+        assertThatThrownBy(() -> fixedExpenseService.findById(fixedExpenseId, userId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Despesa não localizada");
     }
 
     @Test
     public void shouldUpdateFixedExpenseSuccessfully() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.of(existingFixedExpense));
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId))
+                .thenReturn(Optional.of(existingFixedExpense));
 
         FixedExpenseRequestDto dto = new FixedExpenseRequestDto("test-updated", new BigDecimal(1500), 15, categoryId);
 
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existsCategory));
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(existsCategory));
 
-        fixedExpenseService.update(fixedExpenseId, dto);
+        fixedExpenseService.update(fixedExpenseId, dto, userId);
 
         ArgumentCaptor<FixedExpense> captor = ArgumentCaptor.forClass(FixedExpense.class);
         verify(fixedExpenseRepository, times(1)).save(captor.capture());
@@ -234,9 +236,9 @@ public class FixedExpenseServiceTest {
     @Test
     public void shouldThrowWhenUpdateFixedExpenseNotFoundWithId() {
         FixedExpenseRequestDto dto = new FixedExpenseRequestDto("test-updated", new BigDecimal(1500), 15, categoryId);
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.empty());
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> fixedExpenseService.update(fixedExpenseId, dto))
+        assertThatThrownBy(() -> fixedExpenseService.update(fixedExpenseId, dto, userId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Despesa não localizada");
 
@@ -247,10 +249,11 @@ public class FixedExpenseServiceTest {
     public void shouldThrowWhenUpdateFixedExpenseWithCategoryNotFound() {
         FixedExpenseRequestDto dto = new FixedExpenseRequestDto("test-updated", new BigDecimal(1500), 15, categoryId);
 
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.of(existingFixedExpense));
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId))
+                .thenReturn(Optional.of(existingFixedExpense));
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> fixedExpenseService.update(fixedExpenseId, dto))
+        assertThatThrownBy(() -> fixedExpenseService.update(fixedExpenseId, dto, userId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Categoria não localizada");
 
@@ -259,9 +262,10 @@ public class FixedExpenseServiceTest {
 
     @Test
     public void shouldUpdateActiveFixedExpenseSuccessfully() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.of(existingFixedExpense));
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId))
+                .thenReturn(Optional.of(existingFixedExpense));
 
-        fixedExpenseService.updateActive(fixedExpenseId, false);
+        fixedExpenseService.updateActive(fixedExpenseId, false, userId);
         ArgumentCaptor<FixedExpense> captor = ArgumentCaptor.forClass(FixedExpense.class);
         verify(fixedExpenseRepository, times(1)).save(captor.capture());
 
@@ -272,9 +276,9 @@ public class FixedExpenseServiceTest {
 
     @Test
     public void shouldThrowWhenUpdateActiveFixedExpenseNotFound() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.empty());
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> fixedExpenseService.updateActive(fixedExpenseId, false))
+        assertThatThrownBy(() -> fixedExpenseService.updateActive(fixedExpenseId, false, userId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Despesa não localizada");
 
@@ -283,17 +287,18 @@ public class FixedExpenseServiceTest {
 
     @Test
     public void shouldDeleteFixedExpenseSuccessfully() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.of(existingFixedExpense));
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId))
+                .thenReturn(Optional.of(existingFixedExpense));
 
-        fixedExpenseService.delete(fixedExpenseId);
+        fixedExpenseService.delete(fixedExpenseId, userId);
         verify(fixedExpenseRepository, times(1)).delete(existingFixedExpense);
     }
 
     @Test
     public void shouldThrowWhenDeleteFixedExpendeNotFound() {
-        when(fixedExpenseRepository.findById(fixedExpenseId)).thenReturn(Optional.empty());
+        when(fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> fixedExpenseService.delete(fixedExpenseId))
+        assertThatThrownBy(() -> fixedExpenseService.delete(fixedExpenseId, userId))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Despesa não localizada");
 

@@ -2,6 +2,7 @@ package com.appfinace.api.controllers;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -96,6 +97,28 @@ public class CategoryControllerTest {
         }
 
         @Test
+        public void shouldThrowBadRequestWhenCreateCategoryNotBlankNameAndType() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("", "");
+
+                mockMvc.perform(post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+
+                verify(categoryService, never()).createCategory(any(), any());
+        }
+
+        @Test
+        public void shouldThrowBadRequestWhenCreateCategoryInvalidType() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "INVALID");
+
+                mockMvc.perform(post("/api/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+
+                verify(categoryService, never()).createCategory(any(), any());
+        }
+
+        @Test
         public void shouldThrowNotFoundWhenUserNotFoundOnCreate() throws Exception {
                 CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
 
@@ -158,6 +181,17 @@ public class CategoryControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto)))
                                 .andExpect(status().isOk());
+        }
+
+        @Test
+        public void shouldThrowBadRequestWhenUpdateCategoryNotBlankNameAndType() throws Exception {
+                CategoryRequestDto dto = new CategoryRequestDto("", "");
+
+                mockMvc.perform(put("/api/categories/{id}", categoryId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+
+                verify(categoryService, never()).update(any(), any(), any(), any());
         }
 
         @Test

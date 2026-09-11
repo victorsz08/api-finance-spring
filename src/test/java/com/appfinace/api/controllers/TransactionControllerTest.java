@@ -2,6 +2,8 @@ package com.appfinace.api.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -97,6 +99,46 @@ public class TransactionControllerTest {
                 mockMvc.perform(post("/api/transactions")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))).andExpect(status().isCreated());
+        }
+
+        @Test
+        public void shouldThrowBadRequestWhenCreateTransactionNotBlankDescription() throws Exception {
+                TransactionRequestDto dto = new TransactionRequestDto(
+                                "", new BigDecimal("250.00"), TransactionType.EXPENSE, LocalDate.of(2026, 3, 15),
+                                categoryId);
+
+                mockMvc.perform(post("/api/transactions")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+
+                verify(transactionService, never()).create(any(), any());
+        }
+
+        @Test
+        public void shouldThrowBadRequestWhenCreateTransactionNegativeAmount() throws Exception {
+                TransactionRequestDto dto = new TransactionRequestDto(
+                                "Mercado", new BigDecimal("-250.00"), TransactionType.EXPENSE,
+                                LocalDate.of(2026, 3, 15),
+                                categoryId);
+
+                mockMvc.perform(post("/api/transactions")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+
+                verify(transactionService, never()).create(any(), any());
+        }
+
+        @Test
+        public void shouldThrowBadRequestWhenCreateTransactionInvalidTransactionType() throws Exception {
+                TransactionRequestDto dto = new TransactionRequestDto(
+                                "Mercado", new BigDecimal("250.00"), null, LocalDate.of(2026, 3, 15),
+                                categoryId);
+
+                mockMvc.perform(post("/api/transactions")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
+
+                verify(transactionService, never()).create(any(), any());
         }
 
         @Test

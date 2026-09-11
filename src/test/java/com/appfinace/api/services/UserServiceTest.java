@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.appfinace.api.domain.user.User;
+import com.appfinace.api.dto.user.UpdatePasswordRequestDto;
+import com.appfinace.api.dto.user.UpdateUserRequestDto;
 import com.appfinace.api.dto.user.UserRequestDto;
 import com.appfinace.api.infra.S3StoragePort;
 import com.appfinace.api.repositories.ProfileImagesRepository;
@@ -105,11 +107,13 @@ public class UserServiceTest {
 
     @Test
     public void shouldUpdatePasswordWhenCurrentPasswordIsCorrect() {
+        UpdatePasswordRequestDto dto = new UpdatePasswordRequestDto("password-hashed", "new-password");
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("password-hashed", existingUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode("new-password")).thenReturn("new-password-hash");
 
-        userService.updatePassword(userId, "password-hashed", "new-password");
+        userService.updatePassword(userId, dto);
 
         verify(userRepository).save(existingUser);
         assertThat(existingUser.getPassword()).isEqualTo("new-password-hash");
@@ -117,10 +121,12 @@ public class UserServiceTest {
 
     @Test
     public void shouldThrowExceptionWhenCuurentPassowrdIsIncorrect() {
+        UpdatePasswordRequestDto dto = new UpdatePasswordRequestDto("password-incorrect", "new-password");
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("password-incorrect", existingUser.getPassword())).thenReturn(false);
 
-        assertThatThrownBy(() -> userService.updatePassword(userId, "password-incorrect", "new-password"))
+        assertThatThrownBy(() -> userService.updatePassword(userId, dto))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Senha atual incorreta");
 
@@ -129,10 +135,12 @@ public class UserServiceTest {
 
     @Test
     public void shouldUpdateUserSuccessfully() {
+        UpdateUserRequestDto dto = new UpdateUserRequestDto("joao.updated@email.com", "João Updated", null);
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.existsByEmail("joao.updated@email.com")).thenReturn(false);
 
-        userService.updateUser(userId, "João Updated", "joao.updated@email.com", null);
+        userService.updateUser(userId, dto);
 
         verify(userRepository).save(existingUser);
         assertThat(existingUser.getName()).isEqualTo("João Updated");
@@ -143,10 +151,12 @@ public class UserServiceTest {
 
     @Test
     public void shouldThrowConflictWhenUpdatingUserWithExistingEmail() {
+        UpdateUserRequestDto dto = new UpdateUserRequestDto("joao.updated@email.com", "João Updated", null);
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.existsByEmail("joao.updated@email.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.updateUser(userId, "João Updated", "joao.updated@email.com", null))
+        assertThatThrownBy(() -> userService.updateUser(userId, dto))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Email já cadastrado");
 
@@ -156,10 +166,21 @@ public class UserServiceTest {
 
     @Test
     public void shouldDeleteUserSuccessfully() {
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         userService.deleteUser(userId);
 
-        verify(userRepository).deleteById(userId);
+        verify(userRepository).delete(existingUser);
+    }
+
+    @Test
+    public void shouldThrowNotFoundWhenDeleteUserNotFound() {
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.deleteUser(userId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Usuário não encontrado");
+
+        verify(userRepository, never()).delete(any());
     }
 }

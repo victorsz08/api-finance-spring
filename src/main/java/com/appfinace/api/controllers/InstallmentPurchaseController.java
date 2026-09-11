@@ -19,6 +19,9 @@ import com.appfinace.api.dto.installment.InstallmentPurchaseRequestDto;
 import com.appfinace.api.dto.installment.InstallmentPurchaseResponseDto;
 import com.appfinace.api.infra.security.UserDetailsImpl;
 import com.appfinace.api.service.InstallmentPurchaseService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
@@ -32,7 +35,7 @@ public class InstallmentPurchaseController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody InstallmentPurchaseRequestDto body,
+    public ResponseEntity<Void> create(@Valid @RequestBody InstallmentPurchaseRequestDto body,
             @AuthenticationPrincipal UserDetailsImpl user) {
         UUID userId = user.getUser().getId();
         purchaseService.create(body, userId);

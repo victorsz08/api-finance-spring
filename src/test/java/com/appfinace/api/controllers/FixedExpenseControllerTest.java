@@ -3,6 +3,8 @@ package com.appfinace.api.controllers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -49,202 +51,256 @@ import tools.jackson.databind.ObjectMapper;
 @Import(SecurityConfig.class)
 public class FixedExpenseControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private FixedExpenseService fixedExpenseService;
+        @MockitoBean
+        private FixedExpenseService fixedExpenseService;
 
-    @MockitoBean
-    private JwtService jwtService;
+        @MockitoBean
+        private JwtService jwtService;
 
-    @MockitoBean
-    private UserDetailsImplService userDetailsImplService;
+        @MockitoBean
+        private UserDetailsImplService userDetailsImplService;
 
-    private UUID userId;
-    private UUID fixedExpenseId;
-    private UUID categoryId;
+        private UUID userId;
+        private UUID fixedExpenseId;
+        private UUID categoryId;
 
-    @BeforeEach
-    public void setUp() {
-        userId = UUID.randomUUID();
-        fixedExpenseId = UUID.randomUUID();
-        categoryId = UUID.randomUUID();
+        @BeforeEach
+        public void setUp() {
+                userId = UUID.randomUUID();
+                fixedExpenseId = UUID.randomUUID();
+                categoryId = UUID.randomUUID();
 
-        User user = new User();
-        user.setId(userId);
+                User user = new User();
+                user.setId(userId);
 
-        UserDetailsImpl userDetails = new UserDetailsImpl(user);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
+                UserDetailsImpl userDetails = new UserDetailsImpl(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
 
-    @AfterEach
-    public void tearDown() {
-        SecurityContextHolder.clearContext();
-    }
+        @AfterEach
+        public void tearDown() {
+                SecurityContextHolder.clearContext();
+        }
 
-    @Test
-    public void shouldCreateFixedExpenseSuccessfully() throws Exception {
-        FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
-                "Aluguel", new BigDecimal("425.00"), 10, categoryId);
+        @Test
+        public void shouldCreateFixedExpenseSuccessfully() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
+                                "Aluguel", new BigDecimal("425.00"), 10, categoryId);
 
-        mockMvc.perform(post("/api/fixed-expenses")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isCreated());
-    }
+                mockMvc.perform(post("/api/fixed-expenses")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isCreated());
 
-    @Test
-    public void shouldThrowNotFoundWhenCreateFixedExpenseWithInvalidCategory() throws Exception {
-        FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
-                "Aluguel", new BigDecimal("425.00"), 10, categoryId);
+                verify(fixedExpenseService).create(dto, userId);
+        }
 
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada"))
-                .when(fixedExpenseService).create(any(), eq(userId));
+        @Test
+        public void shoudThrowBadRequestCreateFixedExpenseNotBlankDescription() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
+                                "", new BigDecimal("425.00"), 10, categoryId);
 
-        mockMvc.perform(post("/api/fixed-expenses")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
-    }
+                mockMvc.perform(post("/api/fixed-expenses")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
 
-    @Test
-    public void shouldListFiltredFixedExpensesSuccessfully() throws Exception {
-        CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE");
-        FixedExpenseResponseDto expenseDto = new FixedExpenseResponseDto(
-                fixedExpenseId, "Aluguel", new BigDecimal("425.00"), 10, true, categoryDto);
+                verify(fixedExpenseService, never()).create(any(), any());
+        }
 
-        when(fixedExpenseService.listByFiltred(
-                0, 10, null, null, null, null, null, null, userId)).thenReturn(List.of(expenseDto));
+        @Test
+        public void shoudThrowBadRequestCreateFixedExpenseNegativeAmountAndDueDayZero() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
+                                "Aluguel", new BigDecimal("-425.00"), 0, categoryId);
 
-        mockMvc.perform(get("/api/fixed-expenses/filter"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].description").value("Aluguel"));
-    }
+                mockMvc.perform(post("/api/fixed-expenses")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
 
-    @Test
-    public void shouldListFiltredFixedExpensesWithFiltersSuccessfully() throws Exception {
-        when(fixedExpenseService.listByFiltred(
-                0,
-                10,
-                new BigDecimal("1000"),
-                new BigDecimal("2000"),
-                5,
-                20,
-                true,
-                categoryId,
-                userId)).thenReturn(List.of());
+                verify(fixedExpenseService, never()).create(any(), any());
+        }
 
-        mockMvc.perform(get("/api/fixed-expenses/filter")
-                .param("startAmount", "1000")
-                .param("endAmount", "2000")
-                .param("startDueDay", "5")
-                .param("endDueDay", "20")
-                .param("active", "true")
-                .param("categoryId", categoryId.toString())).andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
-    }
+        @Test
+        public void shouldThrowNotFoundWhenCreateFixedExpenseWithInvalidCategory() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
+                                "Aluguel", new BigDecimal("425.00"), 10, categoryId);
 
-    @Test
-    public void shouldFindFixedExpenseByIdSuccessfully() throws Exception {
-        CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE");
-        FixedExpenseResponseDto expenseDto = new FixedExpenseResponseDto(
-                fixedExpenseId, "Aluguel", new BigDecimal("425.00"), 10, true, categoryDto);
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada"))
+                                .when(fixedExpenseService).create(any(), eq(userId));
 
-        when(fixedExpenseService.findById(fixedExpenseId)).thenReturn(expenseDto);
+                mockMvc.perform(post("/api/fixed-expenses")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
+        }
 
-        mockMvc.perform(get("/api/fixed-expenses/{id}", fixedExpenseId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.description").value("Aluguel"))
-                .andExpect(jsonPath("$.category.name").value("Moradia"));
-    }
+        @Test
+        public void shouldListFiltredFixedExpensesSuccessfully() throws Exception {
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE");
+                FixedExpenseResponseDto expenseDto = new FixedExpenseResponseDto(
+                                fixedExpenseId, "Aluguel", new BigDecimal("425.00"), 10, true, categoryDto);
 
-    @Test
-    public void shouldThrowNotFoundWhenFixedExpenseNotFoundOnFind() throws Exception {
-        when(fixedExpenseService.findById(fixedExpenseId))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"));
+                when(fixedExpenseService.listByFiltred(
+                                0, 10, null, null, null, null, null, null, userId)).thenReturn(List.of(expenseDto));
 
-        mockMvc.perform(get("/api/fixed-expenses/{id}", fixedExpenseId))
-                .andExpect(status().isNotFound());
-    }
+                mockMvc.perform(get("/api/fixed-expenses/filter"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].description").value("Aluguel"));
+        }
 
-    @Test
-    public void shouldUpdateFixedExpenseSuccessfully() throws Exception {
-        FixedExpenseRequestDto dto = new FixedExpenseRequestDto("Transporte", new BigDecimal("400.00"), 15, categoryId);
+        @Test
+        public void shouldListFiltredFixedExpensesWithFiltersSuccessfully() throws Exception {
+                when(fixedExpenseService.listByFiltred(
+                                0,
+                                10,
+                                new BigDecimal("1000"),
+                                new BigDecimal("2000"),
+                                5,
+                                20,
+                                true,
+                                categoryId,
+                                userId)).thenReturn(List.of());
 
-        mockMvc.perform(put("/api/fixed-expenses/{id}", fixedExpenseId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isOk());
-    }
+                mockMvc.perform(get("/api/fixed-expenses/filter")
+                                .param("startAmount", "1000")
+                                .param("endAmount", "2000")
+                                .param("startDueDay", "5")
+                                .param("endDueDay", "20")
+                                .param("active", "true")
+                                .param("categoryId", categoryId.toString())).andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(0));
+        }
 
-    @Test
-    public void shouldThrowNotFoundWhenUpdateFixedExpenseNotFound() throws Exception {
-        FixedExpenseRequestDto dto = new FixedExpenseRequestDto("Transporte", new BigDecimal("400.00"), 15, categoryId);
+        @Test
+        public void shouldFindFixedExpenseByIdSuccessfully() throws Exception {
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE");
+                FixedExpenseResponseDto expenseDto = new FixedExpenseResponseDto(
+                                fixedExpenseId, "Aluguel", new BigDecimal("425.00"), 10, true, categoryDto);
 
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
-                .when(fixedExpenseService).update(eq(fixedExpenseId), any());
+                when(fixedExpenseService.findById(fixedExpenseId, userId)).thenReturn(expenseDto);
 
-        mockMvc.perform(put("/api/fixed-expenses/{id}", fixedExpenseId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
-    }
+                mockMvc.perform(get("/api/fixed-expenses/{id}", fixedExpenseId))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.description").value("Aluguel"))
+                                .andExpect(jsonPath("$.category.name").value("Moradia"));
+        }
 
-    @Test
-    public void shouldUpdateActiveStatusSuccessfully() throws Exception {
-        mockMvc.perform(put("/api/fixed-expenses/active/{id}", fixedExpenseId)
-                .param("active", "false")).andExpect(status().isOk());
-    }
+        @Test
+        public void shouldThrowNotFoundWhenFixedExpenseNotFoundOnFind() throws Exception {
+                when(fixedExpenseService.findById(fixedExpenseId, userId))
+                                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"));
 
-    @Test
-    public void shouldThrowNotFoundWhenUpdateActiveFixedExpenseNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
-                .when(fixedExpenseService).updateActive(eq(fixedExpenseId), any());
+                mockMvc.perform(get("/api/fixed-expenses/{id}", fixedExpenseId))
+                                .andExpect(status().isNotFound());
+        }
 
-        mockMvc.perform(put("/api/fixed-expenses/active/{id}", fixedExpenseId)
-                .param("active", "false")).andExpect(status().isNotFound());
-    }
+        @Test
+        public void shouldUpdateFixedExpenseSuccessfully() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto("Transporte", new BigDecimal("400.00"), 15,
+                                categoryId);
 
-    @Test
-    public void shouldMarkFixedExpenseAsPaidSuccessfully() throws Exception {
-        mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
-                .andExpect(status().isOk());
-    }
+                mockMvc.perform(put("/api/fixed-expenses/{id}", fixedExpenseId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isOk());
+        }
 
-    @Test
-    public void shouldThrowNotFoundWhenMarkAsPaidFixedExpenseNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
-                .when(fixedExpenseService).markAsPaid(fixedExpenseId, userId);
+        @Test
+        public void shouldThrowBadRequestWhenUpdateFixedExpenseNotBlankDescription() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
+                                "", new BigDecimal("425.00"), 10, categoryId);
 
-        mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
-                .andExpect(status().isNotFound());
-    }
+                mockMvc.perform(put("/api/fixed-expenses/{id}", fixedExpenseId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
 
-    @Test
-    public void shouldThrowConflictWhenMarkAsPaidFixedExpenseAlreadyInactive() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Despesa já está inativa"))
-                .when(fixedExpenseService).markAsPaid(fixedExpenseId, userId);
+                verify(fixedExpenseService, never()).update(any(), any(), eq(userId));
+        }
 
-        mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
-                .andExpect(status().isConflict());
-    }
+        @Test
+        public void shouldThrowBadRequestWhenUpdateFixedExpenseNegativeAmount() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto(
+                                "Aluguel", new BigDecimal("-425.00"), 0, categoryId);
 
-    @Test
-    public void shouldDeleteFixedExpenseSuccessfully() throws Exception {
-        mockMvc.perform(delete("/api/fixed-expenses/{id}", fixedExpenseId))
-                .andExpect(status().isOk());
-    }
+                mockMvc.perform(put("/api/fixed-expenses/{id}", fixedExpenseId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
 
-    @Test
-    public void shouldThrowNotFoundWhenDeleteFixedExpenseNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
-                .when(fixedExpenseService).delete(fixedExpenseId);
+                verify(fixedExpenseService, never()).update(any(), any(), eq(userId));
+        }
 
-        mockMvc.perform(delete("/api/fixed-expenses/{id}", fixedExpenseId))
-                .andExpect(status().isNotFound());
-    }
+        @Test
+        public void shouldThrowNotFoundWhenUpdateFixedExpenseNotFound() throws Exception {
+                FixedExpenseRequestDto dto = new FixedExpenseRequestDto("Transporte", new BigDecimal("400.00"), 15,
+                                categoryId);
+
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
+                                .when(fixedExpenseService).update(eq(fixedExpenseId), any(), eq(userId));
+
+                mockMvc.perform(put("/api/fixed-expenses/{id}", fixedExpenseId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))).andExpect(status().isNotFound());
+        }
+
+        @Test
+        public void shouldUpdateActiveStatusSuccessfully() throws Exception {
+                mockMvc.perform(put("/api/fixed-expenses/active/{id}", fixedExpenseId)
+                                .param("active", "false")).andExpect(status().isOk());
+        }
+
+        @Test
+        public void shouldThrowNotFoundWhenUpdateActiveFixedExpenseNotFound() throws Exception {
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
+                                .when(fixedExpenseService).updateActive(eq(fixedExpenseId), any(), eq(userId));
+
+                mockMvc.perform(put("/api/fixed-expenses/active/{id}", fixedExpenseId)
+                                .param("active", "false")).andExpect(status().isNotFound());
+        }
+
+        @Test
+        public void shouldMarkFixedExpenseAsPaidSuccessfully() throws Exception {
+                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
+                                .andExpect(status().isOk());
+        }
+
+        @Test
+        public void shouldThrowNotFoundWhenMarkAsPaidFixedExpenseNotFound() throws Exception {
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
+                                .when(fixedExpenseService).markAsPaid(fixedExpenseId, userId);
+
+                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        public void shouldThrowConflictWhenMarkAsPaidFixedExpenseAlreadyInactive() throws Exception {
+                doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Despesa já está inativa"))
+                                .when(fixedExpenseService).markAsPaid(fixedExpenseId, userId);
+
+                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
+                                .andExpect(status().isConflict());
+        }
+
+        @Test
+        public void shouldDeleteFixedExpenseSuccessfully() throws Exception {
+                mockMvc.perform(delete("/api/fixed-expenses/{id}", fixedExpenseId))
+                                .andExpect(status().isOk());
+
+                verify(fixedExpenseService).delete(fixedExpenseId, userId);
+        }
+
+        @Test
+        public void shouldThrowNotFoundWhenDeleteFixedExpenseNotFound() throws Exception {
+                doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
+                                .when(fixedExpenseService).delete(fixedExpenseId, userId);
+
+                mockMvc.perform(delete("/api/fixed-expenses/{id}", fixedExpenseId))
+                                .andExpect(status().isNotFound());
+        }
 }

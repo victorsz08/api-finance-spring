@@ -19,6 +19,8 @@ import com.appfinace.api.infra.security.UserDetailsImpl;
 import com.appfinace.api.service.AuthService;
 import com.appfinace.api.service.UserService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -35,7 +37,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody AuthLoginRequestDto data) {
+    public ResponseEntity<Void> login(@Valid @RequestBody AuthLoginRequestDto data) {
         AuthLoginResponseDto response = this.authService.login(data);
 
         ResponseCookie cookie = ResponseCookie.from("access_token", response.token())

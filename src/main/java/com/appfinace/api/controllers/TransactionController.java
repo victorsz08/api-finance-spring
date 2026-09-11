@@ -19,6 +19,8 @@ import com.appfinace.api.dto.transaction.TransactionResponseDto;
 import com.appfinace.api.infra.security.UserDetailsImpl;
 import com.appfinace.api.service.TransactionService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -32,7 +34,7 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<Void> create(
             @AuthenticationPrincipal UserDetailsImpl user,
-            @RequestBody TransactionRequestDto data) {
+            @Valid @RequestBody TransactionRequestDto data) {
         UUID userId = user.getUser().getId();
         this.transactionService.create(data, userId);
 

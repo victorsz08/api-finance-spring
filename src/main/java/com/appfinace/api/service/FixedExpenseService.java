@@ -51,7 +51,7 @@ public class FixedExpenseService {
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Usuário não localizado"));
 
-                Category category = this.categoryRepository.findById(data.categoryId())
+                Category category = this.categoryRepository.findByIdAndUserId(data.categoryId(), userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Categoria não localizada"));
 
@@ -96,8 +96,8 @@ public class FixedExpenseService {
                                 .toList();
         }
 
-        public FixedExpenseResponseDto findById(UUID id) {
-                FixedExpense fixedExpense = this.fixedExpenseRepository.findById(id)
+        public FixedExpenseResponseDto findById(UUID id, UUID userId) {
+                FixedExpense fixedExpense = this.fixedExpenseRepository.findByIdAndUserId(id, userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Despesa não localizada"));
 
@@ -113,12 +113,12 @@ public class FixedExpenseService {
                                                 fixedExpense.getCategory().getType()));
         }
 
-        public void update(UUID id, FixedExpenseRequestDto data) {
-                FixedExpense fixedExpense = this.fixedExpenseRepository.findById(id)
+        public void update(UUID id, FixedExpenseRequestDto data, UUID userId) {
+                FixedExpense fixedExpense = this.fixedExpenseRepository.findByIdAndUserId(id, userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Despesa não localizada"));
 
-                Category category = this.categoryRepository.findById(data.categoryId())
+                Category category = this.categoryRepository.findByIdAndUserId(data.categoryId(), userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Categoria não localizada"));
 
@@ -130,18 +130,17 @@ public class FixedExpenseService {
                 this.fixedExpenseRepository.save(fixedExpense);
         }
 
-        public void updateActive(UUID id, Boolean active) {
-                FixedExpense fixedExpense = this.fixedExpenseRepository.findById(id)
+        public void updateActive(UUID id, Boolean active, UUID userId) {
+                FixedExpense fixedExpense = this.fixedExpenseRepository.findByIdAndUserId(id, userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Despesa não localizada"));
-
                 fixedExpense.setActive(active);
 
                 this.fixedExpenseRepository.save(fixedExpense);
         }
 
-        public void delete(UUID id) {
-                FixedExpense fixedExpense = this.fixedExpenseRepository.findById(id)
+        public void delete(UUID id, UUID userId) {
+                FixedExpense fixedExpense = this.fixedExpenseRepository.findByIdAndUserId(id, userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Despesa não localizada"));
 

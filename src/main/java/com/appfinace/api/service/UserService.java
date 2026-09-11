@@ -1,7 +1,6 @@
 package com.appfinace.api.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -10,13 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.appfinace.api.domain.user.ProfileImages;
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.user.UserResponseDto;
 import com.appfinace.api.dto.user.ProfileImagesResponseDto;
+import com.appfinace.api.dto.user.UpdatePasswordRequestDto;
+import com.appfinace.api.dto.user.UpdateUserRequestDto;
 import com.appfinace.api.dto.user.UserRequestDto;
 import com.appfinace.api.infra.S3StoragePort;
 import com.appfinace.api.repositories.ProfileImagesRepository;
@@ -74,21 +74,13 @@ public class UserService {
     }
 
     public UserResponseDto findUser(UUID id) {
-        Optional<User> optionalUser = this.userRepository.findById(id);
-
-        if (optionalUser.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
-        }
-
-        User user = optionalUser.get();
+        User user = this.userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         return new UserResponseDto(user.getId(), user.getEmail(), user.getName(), user.getCurrentProfileImgUrl());
     };
 
     public List<UserResponseDto> listUsers(int page, int size, String email, String name) {
-        name = (name != null) ? name : "";
-        email = (email != null) ? email : "";
-
         Pageable pageable = PageRequest.of(page, size);
 
         Page<User> usersFiltred = this.userRepository.getFiltredUsers(name, email, pageable);
@@ -100,23 +92,19 @@ public class UserService {
                 user.getCurrentProfileImgUrl())).stream().toList();
     }
 
-    public void updateUser(UUID id, String name, String email, MultipartFile profileImage) {
-        Optional<User> optionalUser = this.userRepository.findById(id);
+    public void updateUser(UUID id, UpdateUserRequestDto data) {
+        User user = this.userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        if (optionalUser.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
-        }
-
-        User user = optionalUser.get();
-
-        if (email != null && !email.equals(user.getEmail()) && this.userRepository.existsByEmail(email)) {
+        if (data.email() != null && !data.email().equals(user.getEmail())
+                && this.userRepository.existsByEmail(data.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
         ProfileImages profileImages = new ProfileImages();
 
-        if (profileImage != null) {
-            String newProfileImageUrl = this.s3StoragePort.uploadImage(profileImage);
+        if (data.profileImage() != null) {
+            String newProfileImageUrl = this.s3StoragePort.uploadImage(data.profileImage());
 
             profileImages.setProfileImageUrl(newProfileImageUrl);
             profileImages.setUser(user);
@@ -126,26 +114,21 @@ public class UserService {
         }
 
         user.setId(id);
-        user.setName(name);
-        user.setEmail(email);
+        user.setName(data.name());
+        user.setEmail(data.email());
 
         this.userRepository.save(user);
     }
 
-    public void updatePassword(UUID id, String currentPassword, String newPassword) {
-        Optional<User> optionalUser = this.userRepository.findById(id);
+    public void updatePassword(UUID id, UpdatePasswordRequestDto data) {
+        User user = this.userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        if (optionalUser.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
-        }
-
-        User user = optionalUser.get();
-
-        if (!this.passwordEncoder.matches(currentPassword, user.getPassword())) {
+        if (!this.passwordEncoder.matches(data.currentPassword(), user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha atual incorreta");
         }
 
-        String newPasswordHashed = this.passwordEncoder.encode(newPassword);
+        String newPasswordHashed = this.passwordEncoder.encode(data.newPassword());
 
         user.setPassword(newPasswordHashed);
 
@@ -153,11 +136,10 @@ public class UserService {
     }
 
     public void deleteUser(UUID id) {
-        if (!this.userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
-        }
+        User user = this.userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        this.userRepository.deleteById(id);
+        userRepository.delete(user);
     }
 
     public List<ProfileImagesResponseDto> getProfileImagesByUser(UUID id) {
