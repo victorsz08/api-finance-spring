@@ -145,7 +145,7 @@ public class FixedExpenseController {
                 return ResponseEntity.ok().build();
         }
 
-        @Operation(summary = "Marcar despesa fixa como paga", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+        @Operation(summary = "Marcar despesa fixa como paga em um mês/ano especifico", security = @SecurityRequirement(name = "cookieAuth"), responses = {
                         @ApiResponse(responseCode = "200", description = "OK"),
                         @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
                         @ApiResponse(responseCode = "400", description = "Despesa já está inativa", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
@@ -154,14 +154,18 @@ public class FixedExpenseController {
         public ResponseEntity<Void> markAsPaid(
                         @PathVariable UUID id,
                         @AuthenticationPrincipal UserDetailsImpl user,
-                        @RequestParam(required = true) Integer month,
-                        @RequestParam(required = true) Integer year) {
+                        @Parameter(description = "Mês do pagamento") @RequestParam Integer month,
+                        @Parameter(description = "Ano do pagamento") @RequestParam Integer year) {
                 UUID userId = user.getUser().getId();
                 this.fixedExpenseService.markAsPaid(id, month, year, userId);
 
                 return ResponseEntity.ok().build();
         }
 
+        @Operation(summary = "Lista histórico de pagamentos de uma despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Despesa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
         @GetMapping("/{id}/payments")
         public ResponseEntity<List<FixedExpensePaymentResponseDto>> listPayments(@PathVariable UUID id,
                         @AuthenticationPrincipal UserDetailsImpl user) {
