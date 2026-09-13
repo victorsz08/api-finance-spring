@@ -3,5 +3,6 @@ CREATE TABLE fixed_expense_payments (
     month INTEGER NOT NULL,
     year INTEGER NOT NULL,
     paidAt DATE NOT NULL,
-    FOREIGN KEY (fixed_expense_id) REFERENCES fixed_expenses(id)
+    fixed_expense_id UUID,
+    FOREIGN KEY (fixed_expense_id) REFERENCES fixed_expenses (id)
 );

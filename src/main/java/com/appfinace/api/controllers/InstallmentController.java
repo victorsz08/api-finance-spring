@@ -27,7 +27,8 @@ public class InstallmentController {
     }
 
     @PatchMapping("/{id}/pay")
-    public ResponseEntity<Void> payInstallment(@PathVariable UUID id, @AuthenticationPrincipal UserDetailsImpl user) {
+    public ResponseEntity<Void> payInstallment(@PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl user) {
         UUID userId = user.getUser().getId();
         this.installmentService.payInstallment(id, userId);
 
@@ -40,7 +41,8 @@ public class InstallmentController {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
         UUID userId = user.getUser().getId();
-        List<InstallmentResponseDto> data = this.installmentService.listPending(userId, month, year);
+        List<InstallmentResponseDto> data = this.installmentService
+                .listPending(userId, month, year);
 
         return ResponseEntity.ok(data);
     }
