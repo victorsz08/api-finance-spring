@@ -7,12 +7,12 @@ import com.appfinace.api.dto.category.CategoryResponseDto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(name = "Dados da despesa fixa")
+@Schema(name = "Despesa fixa - Resposta")
 public record FixedExpenseResponseDto(
-                @Schema(description = "ID único") UUID id,
-                @Schema(description = "Descrição da despesa") String description,
-                @Schema(description = "Valor da despesa") BigDecimal amount,
-                @Schema(description = "Dia de pagamento da despesa") Integer dueDay,
-                @Schema(description = "Infomativo se a despesa está ativa") Boolean active,
-                @Schema(description = "Categoria da despesa", implementation = CategoryResponseDto.class) CategoryResponseDto category) {
+        @Schema(description = "Identificador único da despesa fixa") UUID id,
+        @Schema(description = "Descrição da despesa fixa") String description,
+        @Schema(description = "Valor da despesa") BigDecimal amount,
+        @Schema(description = "Dia do mês em que a despesa vence (1 a 31)") Integer dueDay,
+        @Schema(description = "Infomativo se a despesa está ativa") Boolean active,
+        @Schema(description = "Categoria vinculada a despesa fixa", implementation = CategoryResponseDto.class) CategoryResponseDto category) {
 }

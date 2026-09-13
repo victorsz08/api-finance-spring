@@ -10,10 +10,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-@Schema(name = "Criação de despesa fixa")
+@Schema(name = "Despesa fixa - Requisição")
 public record FixedExpenseRequestDto(
-        @Schema(description = "Descrição da despesa", example = "Aluguel") @NotBlank String description,
-        @Schema(description = "Valor da despesa", example = "500.00") @NotNull @Positive BigDecimal amount,
-        @Schema(description = "Dia de pagamento da despesa", example = "10") @NotNull @Min(1) @Max(31) Integer dueDay,
-        @Schema(description = "ID de uma categoria") @NotNull UUID categoryId) {
+                @Schema(description = "Descrição da despesa fixa", example = "Aluguel") @NotBlank String description,
+                @Schema(description = "Valor mensal da despesa", example = "500.00") @NotNull @Positive BigDecimal amount,
+                @Schema(description = "Dia do mês em que a despesa vence (1 a 31)", example = "10") @NotNull @Min(1) @Max(31) Integer dueDay,
+                @Schema(description = "Identificador da categoria vinculada") @NotNull UUID categoryId) {
 }
