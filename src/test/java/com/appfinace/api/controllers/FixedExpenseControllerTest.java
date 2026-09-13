@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +37,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.category.CategoryResponseDto;
+import com.appfinace.api.dto.fixed_expense.FixedExpensePaymentResponseDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseRequestDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseResponseDto;
 import com.appfinace.api.infra.config.SecurityConfig;
@@ -265,25 +267,33 @@ public class FixedExpenseControllerTest {
 
         @Test
         public void shouldMarkFixedExpenseAsPaidSuccessfully() throws Exception {
-                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
+                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId)
+                                .param("month", "9")
+                                .param("year", "2026"))
                                 .andExpect(status().isOk());
+
+                verify(fixedExpenseService).markAsPaid(fixedExpenseId, 9, 2026, userId);
         }
 
         @Test
         public void shouldThrowNotFoundWhenMarkAsPaidFixedExpenseNotFound() throws Exception {
                 doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"))
-                                .when(fixedExpenseService).markAsPaid(fixedExpenseId, userId);
+                                .when(fixedExpenseService).markAsPaid(fixedExpenseId, 9, 2026, userId);
 
-                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
+                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId)
+                                .param("month", "9")
+                                .param("year", "2026"))
                                 .andExpect(status().isNotFound());
         }
 
         @Test
         public void shouldThrowConflictWhenMarkAsPaidFixedExpenseAlreadyInactive() throws Exception {
                 doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Despesa já está inativa"))
-                                .when(fixedExpenseService).markAsPaid(fixedExpenseId, userId);
+                                .when(fixedExpenseService).markAsPaid(fixedExpenseId, 9, 2026, userId);
 
-                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId))
+                mockMvc.perform(patch("/api/fixed-expenses/{id}/pay", fixedExpenseId)
+                                .param("month", "9")
+                                .param("year", "2026"))
                                 .andExpect(status().isConflict());
         }
 
@@ -301,6 +311,33 @@ public class FixedExpenseControllerTest {
                                 .when(fixedExpenseService).delete(fixedExpenseId, userId);
 
                 mockMvc.perform(delete("/api/fixed-expenses/{id}", fixedExpenseId))
+                                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        public void shouldReturnListFixedExpensePaymentsSuccessfully() throws Exception {
+                FixedExpensePaymentResponseDto dto = new FixedExpensePaymentResponseDto(
+                                UUID.randomUUID(),
+                                9,
+                                2026,
+                                LocalDate.of(2026, 9, 10));
+
+                when(fixedExpenseService.listPayments(fixedExpenseId, userId))
+                                .thenReturn(List.of(dto));
+
+                mockMvc.perform(get("/api/fixed-expenses/{id}/payments", fixedExpenseId)).andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].month").value(9))
+                                .andExpect(jsonPath("$[0].year").value(2026))
+                                .andExpect(jsonPath("$[0].paidAt").value(LocalDate.of(2026, 9, 10).toString()));
+        }
+
+        @Test
+        public void shouldReturnNotFoundWhenListPaymentsWithFixedExpenseNotFound() throws Exception {
+                when(fixedExpenseService.listPayments(fixedExpenseId, userId))
+                                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Despesa não localizada"));
+
+                mockMvc.perform(get("/api/fixed-expenses/{id}/payments", fixedExpenseId))
                                 .andExpect(status().isNotFound());
         }
 }
