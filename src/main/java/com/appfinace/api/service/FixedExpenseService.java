@@ -12,15 +12,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.appfinace.api.domain.FixedExpensePayment;
 import com.appfinace.api.domain.category.Category;
 import com.appfinace.api.domain.fixed_expense.FixedExpense;
 import com.appfinace.api.domain.transaction.Transaction;
 import com.appfinace.api.domain.transaction.TransactionType;
 import com.appfinace.api.domain.user.User;
 import com.appfinace.api.dto.category.CategoryResponseDto;
+import com.appfinace.api.dto.fixed_expense.FixedExpensePaymentResponseDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseRequestDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseResponseDto;
 import com.appfinace.api.repositories.CategoryRepository;
+import com.appfinace.api.repositories.FixedExpensePaymentRepository;
 import com.appfinace.api.repositories.FixedExpenseRepository;
 import com.appfinace.api.repositories.TransactionRepository;
 import com.appfinace.api.repositories.UserRepository;
@@ -34,16 +37,19 @@ public class FixedExpenseService {
         private final UserRepository userRepository;
         private final CategoryRepository categoryRepository;
         private final TransactionRepository transactionRepository;
+        private final FixedExpensePaymentRepository fixedExpensePaymentRepository;
 
         public FixedExpenseService(
                         FixedExpenseRepository fixedExpenseRepository,
                         UserRepository userRepository,
                         CategoryRepository categoryRepository,
-                        TransactionRepository transactionRepository) {
+                        TransactionRepository transactionRepository,
+                        FixedExpensePaymentRepository fixedExpensePaymentRepository) {
                 this.fixedExpenseRepository = fixedExpenseRepository;
                 this.userRepository = userRepository;
                 this.categoryRepository = categoryRepository;
                 this.transactionRepository = transactionRepository;
+                this.fixedExpensePaymentRepository = fixedExpensePaymentRepository;
         }
 
         public void create(FixedExpenseRequestDto data, UUID userId) {
@@ -148,7 +154,7 @@ public class FixedExpenseService {
         }
 
         @Transactional
-        public void markAsPaid(UUID id, UUID userId) {
+        public void markAsPaid(UUID id, Integer month, Integer year, UUID userId) {
                 FixedExpense fixedExpense = this.fixedExpenseRepository.findByIdAndUserId(id, userId)
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                                                 "Despesa não localizada"));
@@ -156,6 +162,20 @@ public class FixedExpenseService {
                 if (!fixedExpense.getActive()) {
                         throw new ResponseStatusException(HttpStatus.CONFLICT, "Despesa já está inativa");
                 }
+
+                Boolean alreadyPaid = fixedExpensePaymentRepository.existsByFixedExpenseIdAndMonthAndYear(id, month,
+                                year);
+
+                if (alreadyPaid) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Despesa já paga neste mês");
+                }
+
+                FixedExpensePayment expensePayment = new FixedExpensePayment();
+                expensePayment.setMonth(month);
+                expensePayment.setYear(year);
+                expensePayment.setPaidAt(LocalDate.now());
+                expensePayment.setFixedExpense(fixedExpense);
+                fixedExpensePaymentRepository.save(expensePayment);
 
                 fixedExpense.setActive(false);
                 this.fixedExpenseRepository.save(fixedExpense);
@@ -169,5 +189,20 @@ public class FixedExpenseService {
                 transaction.setCategory(fixedExpense.getCategory());
 
                 this.transactionRepository.save(transaction);
+        }
+
+        public List<FixedExpensePaymentResponseDto> listPayments(UUID fixedExpenseId, UUID userId) {
+                fixedExpenseRepository.findByIdAndUserId(fixedExpenseId, userId)
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                                "Despesa não localizada"));
+
+                List<FixedExpensePayment> payments = fixedExpensePaymentRepository
+                                .findByFixedExpenseIdOrderByYearDescMonthDesc(fixedExpenseId);
+
+                return payments.stream().map(p -> new FixedExpensePaymentResponseDto(
+                                p.getId(),
+                                p.getMonth(),
+                                p.getYear(),
+                                p.getPaidAt())).toList();
         }
 }

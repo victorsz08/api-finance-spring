@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.appfinace.api.dto.fixed_expense.FixedExpensePaymentResponseDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseRequestDto;
 import com.appfinace.api.dto.fixed_expense.FixedExpenseResponseDto;
 import com.appfinace.api.infra.exception.ExceptionResponseDto;
@@ -38,121 +39,136 @@ import jakarta.validation.Valid;
 @Tag(name = "Despesa Fixa", description = "Endpoint de gerenciamento de despesas fixas")
 public class FixedExpenseController {
 
-    private final FixedExpenseService fixedExpenseService;
+        private final FixedExpenseService fixedExpenseService;
 
-    public FixedExpenseController(FixedExpenseService fixedExpenseService) {
-        this.fixedExpenseService = fixedExpenseService;
-    }
+        public FixedExpenseController(FixedExpenseService fixedExpenseService) {
+                this.fixedExpenseService = fixedExpenseService;
+        }
 
-    @Operation(summary = "Criar despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "201", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Usuário não localizado", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
-            @ApiResponse(responseCode = "404", description = "Categoria não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dados incorretos", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
-    })
-    @PostMapping
-    public ResponseEntity<Void> create(
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @Valid @RequestBody FixedExpenseRequestDto body) {
-        UUID userId = user.getUser().getId();
+        @Operation(summary = "Criar despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "201", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Usuário não localizado", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
+                        @ApiResponse(responseCode = "404", description = "Categoria não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
+                        @ApiResponse(responseCode = "400", description = "Dados incorretos", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
+        @PostMapping
+        public ResponseEntity<Void> create(
+                        @AuthenticationPrincipal UserDetailsImpl user,
+                        @Valid @RequestBody FixedExpenseRequestDto body) {
+                UUID userId = user.getUser().getId();
 
-        this.fixedExpenseService.create(body, userId);
+                this.fixedExpenseService.create(body, userId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
+                return ResponseEntity.status(HttpStatus.CREATED).build();
+        }
 
-    @Operation(summary = "Lista despesas fixas filtradas", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "200", description = "OK")
-    })
-    @GetMapping("/filter")
-    public ResponseEntity<List<FixedExpenseResponseDto>> listFiltred(
-            @AuthenticationPrincipal UserDetailsImpl user,
-            @Parameter(description = "Número da pagina") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Quantidade de resultados por página") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Fitro por ID da categoria") @RequestParam(required = false) UUID categoryId,
-            @Parameter(description = "Filtro pacial por valor mínimo da despesa") @RequestParam(required = false) BigDecimal startAmount,
-            @Parameter(description = "Filtro parcial por valor máximo da despesa") @RequestParam(required = false) BigDecimal endAmount,
-            @Parameter(description = "Filtro parcial pela data mínima da despesa") @RequestParam(required = false) Integer startDueDay,
-            @Parameter(description = "Filtro parcial pela data máxima da despesa") @RequestParam(required = false) Integer endDueDay,
-            @Parameter(description = "Filtro parcial de despesa ativa ou inativa") @RequestParam(required = false) Boolean active) {
-        UUID userId = user.getUser().getId();
+        @Operation(summary = "Lista despesas fixas filtradas", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK")
+        })
+        @GetMapping("/filter")
+        public ResponseEntity<List<FixedExpenseResponseDto>> listFiltred(
+                        @AuthenticationPrincipal UserDetailsImpl user,
+                        @Parameter(description = "Número da pagina") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Quantidade de resultados por página") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Fitro por ID da categoria") @RequestParam(required = false) UUID categoryId,
+                        @Parameter(description = "Filtro pacial por valor mínimo da despesa") @RequestParam(required = false) BigDecimal startAmount,
+                        @Parameter(description = "Filtro parcial por valor máximo da despesa") @RequestParam(required = false) BigDecimal endAmount,
+                        @Parameter(description = "Filtro parcial pela data mínima da despesa") @RequestParam(required = false) Integer startDueDay,
+                        @Parameter(description = "Filtro parcial pela data máxima da despesa") @RequestParam(required = false) Integer endDueDay,
+                        @Parameter(description = "Filtro parcial de despesa ativa ou inativa") @RequestParam(required = false) Boolean active) {
+                UUID userId = user.getUser().getId();
 
-        List<FixedExpenseResponseDto> data = this.fixedExpenseService.listByFiltred(
-                page,
-                size,
-                startAmount,
-                endAmount,
-                startDueDay,
-                endDueDay,
-                active,
-                categoryId,
-                userId);
+                List<FixedExpenseResponseDto> data = this.fixedExpenseService.listByFiltred(
+                                page,
+                                size,
+                                startAmount,
+                                endAmount,
+                                startDueDay,
+                                endDueDay,
+                                active,
+                                categoryId,
+                                userId);
 
-        return ResponseEntity.ok(data);
-    }
+                return ResponseEntity.ok(data);
+        }
 
-    @Operation(summary = "Busca despesa fixa pelo ID", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<FixedExpenseResponseDto> find(@AuthenticationPrincipal UserDetailsImpl user,
-            @PathVariable UUID id) {
-        UUID userId = user.getUser().getId();
-        FixedExpenseResponseDto data = this.fixedExpenseService.findById(id, userId);
+        @Operation(summary = "Busca despesa fixa pelo ID", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
+        @GetMapping("/{id}")
+        public ResponseEntity<FixedExpenseResponseDto> find(@AuthenticationPrincipal UserDetailsImpl user,
+                        @PathVariable UUID id) {
+                UUID userId = user.getUser().getId();
+                FixedExpenseResponseDto data = this.fixedExpenseService.findById(id, userId);
 
-        return ResponseEntity.ok(data);
-    }
+                return ResponseEntity.ok(data);
+        }
 
-    @Operation(summary = "Atualiza despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Dados incorretos", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
-    })
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
-            @Valid @RequestBody FixedExpenseRequestDto body) {
-        UUID userId = user.getUser().getId();
-        this.fixedExpenseService.update(id, body, userId);
+        @Operation(summary = "Atualiza despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
+                        @ApiResponse(responseCode = "400", description = "Dados incorretos", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
+        @PutMapping("/{id}")
+        public ResponseEntity<Void> update(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
+                        @Valid @RequestBody FixedExpenseRequestDto body) {
+                UUID userId = user.getUser().getId();
+                this.fixedExpenseService.update(id, body, userId);
 
-        return ResponseEntity.ok().build();
-    }
+                return ResponseEntity.ok().build();
+        }
 
-    @Operation(summary = "Ativa ou desativa despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
-    })
-    @PutMapping("/active/{id}")
-    public ResponseEntity<Void> updateActivEntity(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
-            @Parameter(description = "Informa um booleano para ativar ou desativar despesa fixa") @RequestParam Boolean active) {
-        UUID userId = user.getUser().getId();
-        this.fixedExpenseService.updateActive(id, active, userId);
+        @Operation(summary = "Ativa ou desativa despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
+        @PutMapping("/active/{id}")
+        public ResponseEntity<Void> updateActivEntity(@AuthenticationPrincipal UserDetailsImpl user,
+                        @PathVariable UUID id,
+                        @Parameter(description = "Informa um booleano para ativar ou desativar despesa fixa") @RequestParam Boolean active) {
+                UUID userId = user.getUser().getId();
+                this.fixedExpenseService.updateActive(id, active, userId);
 
-        return ResponseEntity.ok().build();
-    }
+                return ResponseEntity.ok().build();
+        }
 
-    @Operation(summary = "Excluir despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id) {
-        UUID userId = user.getUser().getId();
-        this.fixedExpenseService.delete(id, userId);
+        @Operation(summary = "Excluir despesa fixa", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> delete(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id) {
+                UUID userId = user.getUser().getId();
+                this.fixedExpenseService.delete(id, userId);
 
-        return ResponseEntity.ok().build();
-    }
+                return ResponseEntity.ok().build();
+        }
 
-    @Operation(summary = "Marcar despesa fixa como paga", security = @SecurityRequirement(name = "cookieAuth"), responses = {
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Despesa já está inativa", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
-    })
-    @PatchMapping("/{id}/pay")
-    public ResponseEntity<Void> markAsPaid(@PathVariable UUID id, @AuthenticationPrincipal UserDetailsImpl user) {
-        UUID userId = user.getUser().getId();
-        this.fixedExpenseService.markAsPaid(id, userId);
+        @Operation(summary = "Marcar despesa fixa como paga", security = @SecurityRequirement(name = "cookieAuth"), responses = {
+                        @ApiResponse(responseCode = "200", description = "OK"),
+                        @ApiResponse(responseCode = "404", description = "Despesa fixa não localizada", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class))),
+                        @ApiResponse(responseCode = "400", description = "Despesa já está inativa", content = @Content(schema = @Schema(implementation = ExceptionResponseDto.class)))
+        })
+        @PatchMapping("/{id}/pay")
+        public ResponseEntity<Void> markAsPaid(
+                        @PathVariable UUID id,
+                        @AuthenticationPrincipal UserDetailsImpl user,
+                        @RequestParam(required = true) Integer month,
+                        @RequestParam(required = true) Integer year) {
+                UUID userId = user.getUser().getId();
+                this.fixedExpenseService.markAsPaid(id, month, year, userId);
 
-        return ResponseEntity.ok().build();
-    }
+                return ResponseEntity.ok().build();
+        }
+
+        @GetMapping("/{id}/payments")
+        public ResponseEntity<List<FixedExpensePaymentResponseDto>> listPayments(@PathVariable UUID id,
+                        @AuthenticationPrincipal UserDetailsImpl user) {
+                UUID userId = user.getUser().getId();
+                List<FixedExpensePaymentResponseDto> data = fixedExpenseService.listPayments(id, userId);
+
+                return ResponseEntity.ok(data);
+        }
+
 }
