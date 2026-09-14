@@ -4,10 +4,10 @@ import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(name = "Dados de resposta da categoria")
+@Schema(name = "Categoria - Resposta")
 public record CategoryResponseDto(
-        @Schema(description = "ID unico") UUID id,
-        @Schema(description = "Nome da categoria") String name,
-        @Schema(description = "Tipo da categoria") String type) {
+                @Schema(description = "ID unico") UUID id,
+                @Schema(description = "Nome da categoria") String name,
+                @Schema(description = "Tipo da categoria") String type) {
 
 }
