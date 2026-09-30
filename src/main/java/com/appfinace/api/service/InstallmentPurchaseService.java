@@ -146,7 +146,9 @@ public class InstallmentPurchaseService {
                 new CategoryResponseDto(
                         purchase.getCategory().getId(),
                         purchase.getCategory().getName(),
-                        purchase.getCategory().getType()),
+                        purchase.getCategory().getType(),
+                        purchase.getCategory().getIcon()
+                ),
                 installments);
     }
 }

@@ -88,7 +88,7 @@ public class CategoryController {
     public ResponseEntity<Void> update(@AuthenticationPrincipal UserDetailsImpl user, @PathVariable UUID id,
             @Valid @RequestBody CategoryRequestDto body) {
         UUID userId = user.getUser().getId();
-        this.categoryService.update(id, body.name(), body.type(), userId);
+        this.categoryService.update(id, userId, body);
 
         return ResponseEntity.ok().build();
     }

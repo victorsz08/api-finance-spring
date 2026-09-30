@@ -98,7 +98,9 @@ public class FixedExpenseService {
                                 new CategoryResponseDto(
                                                 f.getCategory().getId(),
                                                 f.getCategory().getName(),
-                                                f.getCategory().getType())))
+                                                f.getCategory().getType(),
+                                                f.getCategory().getIcon()
+                                        )))
                                 .toList();
         }
 
@@ -116,7 +118,9 @@ public class FixedExpenseService {
                                 new CategoryResponseDto(
                                                 fixedExpense.getCategory().getId(),
                                                 fixedExpense.getCategory().getName(),
-                                                fixedExpense.getCategory().getType()));
+                                                fixedExpense.getCategory().getType(),
+                                                fixedExpense.getCategory().getIcon()
+                                        ));
         }
 
         public void update(UUID id, FixedExpenseRequestDto data, UUID userId) {

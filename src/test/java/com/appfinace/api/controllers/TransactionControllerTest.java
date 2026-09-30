@@ -157,7 +157,7 @@ public class TransactionControllerTest {
 
         @Test
         public void shouldListTransactionsByMonthSuccessfully() throws Exception {
-                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Alimentação", "EXPENSE");
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Alimentação", "EXPENSE", "cash");
                 TransactionResponseDto transactionDto = new TransactionResponseDto(
                                 transactionId, "Mercado", new BigDecimal("250.00"), TransactionType.EXPENSE,
                                 LocalDate.of(2026, 3, 15),

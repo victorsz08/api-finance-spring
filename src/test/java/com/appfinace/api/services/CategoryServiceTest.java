@@ -62,7 +62,7 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldCreateCategorySuccessfully() {
-        CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE");
+        CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE", "cash");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -80,7 +80,7 @@ public class CategoryServiceTest {
 
     @Test
     public void shouldThrowWhenCreateCategoryWithUserNotExists() {
-        CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE");
+        CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE", "cash");
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
@@ -142,8 +142,9 @@ public class CategoryServiceTest {
     @Test
     public void shouldUpdateCategorySuccessfully() {
         when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(existingsCategory));
+        CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE", "cash");
 
-        categoryService.update(categoryId, "Transporte", "EXPENSE", userId);
+        categoryService.update(categoryId, userId, dto);
 
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         verify(categoryRepository).save(captor.capture());
@@ -155,8 +156,9 @@ public class CategoryServiceTest {
     @Test
     public void shouldThrowUpdateCategoryWhenCategoryNotExists() {
         when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.empty());
+CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE", "cash");
 
-        assertThatThrownBy(() -> categoryService.update(categoryId, "Transporte", "Expense", userId))
+        assertThatThrownBy(() -> categoryService.update(categoryId, userId, dto))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Categoria não localizada com esse id");
 
@@ -166,8 +168,9 @@ public class CategoryServiceTest {
     @Test
     public void shouldThrowNotFoundWhenUpdatingCategoryThatBelongsToAnotherUser() {
         when(categoryRepository.findByIdAndUserId(categoryId, otherUserId)).thenReturn(Optional.empty());
+        CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE", "cash");
 
-        assertThatThrownBy(() -> categoryService.update(categoryId, "Hackeado", "EXPENSE", otherUserId))
+        assertThatThrownBy(() -> categoryService.update(categoryId, otherUserId, dto))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Categoria não localizada com esse id");
 

@@ -72,7 +72,9 @@ public class TransactionService {
                         new CategoryResponseDto(
                                 t.getCategory().getId(),
                                 t.getCategory().getName(),
-                                t.getCategory().getType())))
+                                t.getCategory().getType(),
+                                t.getCategory().getIcon()
+                        )))
                 .toList();
     }
 

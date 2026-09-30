@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record CategoryResponseDto(
                 @Schema(description = "ID unico") UUID id,
                 @Schema(description = "Nome da categoria") String name,
-                @Schema(description = "Tipo da categoria") String type) {
+                @Schema(description = "Tipo da categoria") String type,
+                @Schema(description = "Icone da categoria") String icone
+            ) {
 
 }

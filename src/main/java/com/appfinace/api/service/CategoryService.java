@@ -35,6 +35,7 @@ public class CategoryService {
 
         aCategory.setName(data.name());
         aCategory.setType(data.type());
+        aCategory.setIcon(data.icon());
         aCategory.setUser(user);
 
         this.categoryRepository.save(aCategory);
@@ -48,7 +49,9 @@ public class CategoryService {
         return new CategoryResponseDto(
                 category.getId(),
                 category.getName(),
-                category.getType());
+                category.getType(),
+                category.getIcon()
+            );
     }
 
     public List<CategoryResponseDto> listCategories(UUID userId) {
@@ -57,16 +60,19 @@ public class CategoryService {
         return categories.stream().map(c -> new CategoryResponseDto(
                 c.getId(),
                 c.getName(),
-                c.getType())).toList();
+                c.getType(),
+                c.getIcon()
+            )).toList();
     }
 
-    public void update(UUID id, String name, String type, UUID userId) {
+    public void update(UUID id, UUID userId, CategoryRequestDto data) {
         Category category = this.categoryRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Categoria não localizada com esse id"));
 
-        category.setName(name);
-        category.setType(type);
+        category.setName(data.name());
+        category.setType(data.type());
+        category.setIcon(data.icon());
 
         this.categoryRepository.save(category);
     }

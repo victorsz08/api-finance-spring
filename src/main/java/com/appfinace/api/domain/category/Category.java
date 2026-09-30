@@ -31,6 +31,8 @@ public class Category {
 
     private String type;
 
+    private String icon;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

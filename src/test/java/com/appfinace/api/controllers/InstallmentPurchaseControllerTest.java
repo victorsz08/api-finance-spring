@@ -143,7 +143,7 @@ public class InstallmentPurchaseControllerTest {
 
         @Test
         public void shouldListFiltredInstallmentPurchasesSuccessfully() throws Exception {
-                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Eletronicos", "EXPENSE");
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Eletronicos", "EXPENSE", "cash");
                 InstallmentResponseDto installmentDto = new InstallmentResponseDto(
                                 installmentId, 1, new BigDecimal("300.00"), LocalDate.of(2026, 10, 1),
                                 InstallmentStatus.PENDING);
@@ -181,7 +181,7 @@ public class InstallmentPurchaseControllerTest {
 
         @Test
         public void shouldFindInstallmentPurchaseByIdSuccessfully() throws Exception {
-                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Eletronicos", "EXPENSE");
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Eletronicos", "EXPENSE", "cash");
                 InstallmentPurchaseResponseDto purchaseDto = new InstallmentPurchaseResponseDto(
                                 purchaseId, "Fone de Ouvido", new BigDecimal("300.00"), 1,
                                 LocalDate.of(2026, 9, 1), categoryDto, List.of());

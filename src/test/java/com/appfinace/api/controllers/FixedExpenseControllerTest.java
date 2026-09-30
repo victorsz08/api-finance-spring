@@ -144,7 +144,7 @@ public class FixedExpenseControllerTest {
 
         @Test
         public void shouldListFiltredFixedExpensesSuccessfully() throws Exception {
-                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE");
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE", "cash");
                 FixedExpenseResponseDto expenseDto = new FixedExpenseResponseDto(
                                 fixedExpenseId, "Aluguel", new BigDecimal("425.00"), 10, true, categoryDto);
 
@@ -182,7 +182,7 @@ public class FixedExpenseControllerTest {
 
         @Test
         public void shouldFindFixedExpenseByIdSuccessfully() throws Exception {
-                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE");
+                CategoryResponseDto categoryDto = new CategoryResponseDto(categoryId, "Moradia", "EXPENSE", "cash");
                 FixedExpenseResponseDto expenseDto = new FixedExpenseResponseDto(
                                 fixedExpenseId, "Aluguel", new BigDecimal("425.00"), 10, true, categoryDto);
 

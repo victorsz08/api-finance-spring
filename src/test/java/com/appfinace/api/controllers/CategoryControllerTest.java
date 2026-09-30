@@ -88,7 +88,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldCreateCategorySuccessfully() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
+                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE", "cash");
 
                 mockMvc.perform(post("/api/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldThrowBadRequestWhenCreateCategoryNotBlankNameAndType() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("", "");
+                CategoryRequestDto dto = new CategoryRequestDto("", "", "");
 
                 mockMvc.perform(post("/api/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldThrowBadRequestWhenCreateCategoryInvalidType() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "INVALID");
+                CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "INVALID", "");
 
                 mockMvc.perform(post("/api/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +120,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldThrowNotFoundWhenUserNotFoundOnCreate() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
+                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE", "cash");
 
                 doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não localizado com esse id"))
                                 .when(categoryService).createCategory(any(), eq(userId));
@@ -132,7 +132,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldListCategoriesSuccessfully() throws Exception {
-                CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE");
+                CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE", "cah");
 
                 when(categoryService.listCategories(userId)).thenReturn(List.of(response));
 
@@ -153,7 +153,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldFindCategoryByIdSuccessfully() throws Exception {
-                CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE");
+                CategoryResponseDto response = new CategoryResponseDto(categoryId, "Transporte", "EXPENSE", "cash");
 
                 when(categoryService.findCategory(categoryId, userId)).thenReturn(response);
 
@@ -175,7 +175,7 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldUpdateCategorySuccessfully() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE");
+                CategoryRequestDto dto = new CategoryRequestDto("Transporte", "EXPENSE", "cash");
 
                 mockMvc.perform(put("/api/categories/{id}", categoryId)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -185,21 +185,21 @@ public class CategoryControllerTest {
 
         @Test
         public void shouldThrowBadRequestWhenUpdateCategoryNotBlankNameAndType() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("", "");
+                CategoryRequestDto dto = new CategoryRequestDto("", "", "");
 
                 mockMvc.perform(put("/api/categories/{id}", categoryId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
 
-                verify(categoryService, never()).update(any(), any(), any(), any());
+                verify(categoryService, never()).update(any(), any(), any());
         }
 
         @Test
         public void shouldThrowNotFoundWhenUpdateCategoryNotFound() throws Exception {
-                CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE");
+                CategoryRequestDto dto = new CategoryRequestDto("Alimentação", "EXPENSE", "cash");
 
                 doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não localizada com esse id"))
-                                .when(categoryService).update(categoryId, "Alimentação", "EXPENSE", userId);
+                                .when(categoryService).update(categoryId, userId, dto);
 
                 mockMvc.perform(put("/api/categories/{id}", categoryId)
                                 .contentType(MediaType.APPLICATION_JSON)

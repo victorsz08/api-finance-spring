@@ -1,1 +1,0 @@
-ALTER TABLE users RENAME COLUMN profile_image_url TO current_profile_img_url;

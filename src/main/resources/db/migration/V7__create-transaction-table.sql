@@ -11,5 +11,3 @@ CREATE TABLE transactions (
     FOREIGN KEY (category_id) REFERENCES categories(id),
     FOREIGN KEY (installment_id) REFERENCES installments(id)
 );
-
-CREATE INDEX idx_transactions_user_date ON transactions (user_id, date);
