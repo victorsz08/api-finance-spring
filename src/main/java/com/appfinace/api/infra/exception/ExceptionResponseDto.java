@@ -1,6 +1,7 @@
 package com.appfinace.api.infra.exception;
 
 import java.time.Instant;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -8,8 +9,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record ExceptionResponseDto(
         @Schema(description = "Data e hora") Instant timestamp,
         @Schema(description = "Codigo do status") int statusCode,
-        @Schema(description = "Mensagem de erro") String message) {
+        @Schema(description = "Mensagem de erro") String message,
+        Map<String, String> fieldErrors
+    ) {
     public ExceptionResponseDto(int statusCode, String message) {
-        this(Instant.now(), statusCode, message);
+        this(Instant.now(), statusCode, message, null);
     }
 }

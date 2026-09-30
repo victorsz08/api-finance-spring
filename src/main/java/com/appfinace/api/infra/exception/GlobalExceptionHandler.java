@@ -1,6 +1,9 @@
 package com.appfinace.api.infra.exception;
 
 import org.springframework.validation.BindException;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -43,10 +46,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponseDto> handleValidationException(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(err -> err.getField() + ":" + err.getDefaultMessage())
-                .collect(Collectors.joining("; "));
-
+        String message = "Dados Inválidos";
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach((err) -> fieldErrors.putIfAbsent(err.getField(), err.getDefaultMessage()) );
         ExceptionResponseDto body = new ExceptionResponseDto(HttpStatus.BAD_REQUEST.value(), message);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
