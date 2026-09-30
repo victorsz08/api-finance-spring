@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
   api:
-    image: api-finance:1.1.4
+    image: api-finance:1.1.5
     container_name: api-finance
     env_file: .env
     ports:
